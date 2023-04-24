@@ -49,6 +49,7 @@ pub fn machine_start() -> ! {
 
 #[no_mangle]
 pub fn kernel_main() -> ! {
+    println!("\x1b[1;31m{}\x1b[0m", kfc_sbi::LOGO);
     info!("Entering into kernel_main function!");
     info!("uart print test passed!");
     panic!("\x1b[1;33mshutdown is not implemented yet...\x1b[0m");
