@@ -16,9 +16,9 @@ run_with_gdb: build
 		-nographic \
 		-bios none \
 		-device loader,file=target/riscv64gc-unknown-none-elf/release/os.bin,addr=0x80000000 \
-		-s -S &
+		-s -S
 
-gdb: run_with_gdb
+gdb: 
 	riscv64-unknown-elf-gdb \
     	-ex 'file target/riscv64gc-unknown-none-elf/release/os' \
     	-ex 'set arch riscv:rv64' \

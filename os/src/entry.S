@@ -1,9 +1,9 @@
-# initial the sp and go to os
+# initial the jump between m-mode and s-mode
     .section .text.entry
     .global _start
 _start:
     la sp, boot_stack_top
-    call os_main
+    call machine_start
 
 # set the boot stack
     .section .bss.stack
