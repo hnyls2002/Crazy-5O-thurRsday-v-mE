@@ -1,5 +1,7 @@
-build: 
-	@cargo build --release
+LOG ?= NoneLog
+
+build:
+	@cargo build --release --features $(LOG)
 	@file target/riscv64gc-unknown-none-elf/release/os
 	@rust-objcopy --strip-all target/riscv64gc-unknown-none-elf/release/os -O binary target/riscv64gc-unknown-none-elf/release/os.bin
 

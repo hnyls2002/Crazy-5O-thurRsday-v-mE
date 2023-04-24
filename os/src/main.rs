@@ -4,6 +4,7 @@
 
 #[macro_use]
 mod console;
+mod kfc_logger;
 mod kfc_sbi;
 mod lang_items;
 
@@ -48,7 +49,7 @@ pub fn machine_start() -> ! {
 
 #[no_mangle]
 pub fn kernel_main() -> ! {
-    println!("\x1b[1;31mEntering into kernel_main function!\x1b[0m");
-    println!("\x1b[1;32muart print test passed!\x1b[0m");
+    info!("Entering into kernel_main function!");
+    info!("uart print test passed!");
     panic!("\x1b[1;33mshutdown is not implemented yet...\x1b[0m");
 }
