@@ -6,6 +6,7 @@ use core::ptr;
 // InLinkedList : just works as an entry
 // each node inside is a usize
 // usize can be viewed as a pointer to another usize
+#[derive(Clone, Copy)]
 pub struct InLinkedList {
     head: *mut usize,
 }
