@@ -1,6 +1,8 @@
 // instrusive linked list : only the pointer is stored in the node
 // Amazing linux world!
 
+#![allow(dead_code)]
+
 use core::ptr;
 
 // InLinkedList : just works as an entry
@@ -79,12 +81,12 @@ impl InLinkedList {
         self.head.is_null()
     }
 
-    pub unsafe fn push(&self, item: *mut usize) {
+    pub unsafe fn push(&mut self, item: *mut usize) {
         *item = self.head as usize;
         self.head = item;
     }
 
-    pub unsafe fn pop(&self) -> Option<*mut usize> {
+    pub unsafe fn pop(&mut self) -> Option<*mut usize> {
         match self.is_empty() {
             true => None,
             false => {

@@ -1,8 +1,9 @@
+#![allow(dead_code)]
 use core::{
-    alloc::{GlobalAlloc, Layout},
+    alloc::Layout,
     cmp::{max, min},
+    fmt::Debug,
     mem::size_of,
-    ptr::null_mut,
     usize,
 };
 
@@ -18,6 +19,16 @@ pub struct Heap {
     user: usize,  // allocated to user
     real: usize,  // actually allocated
     total: usize, // total memory
+}
+
+impl Debug for Heap {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Heap")
+            .field("user", &self.user)
+            .field("real", &self.real)
+            .field("total", &self.total)
+            .finish()
+    }
 }
 
 impl Heap {
@@ -47,14 +58,14 @@ impl Heap {
         }
     }
 
-    pub unsafe fn init(&self, start: usize, size: usize) {
+    pub unsafe fn init(&mut self, start: usize, size: usize) {
         self.add_to_heap(start, start + size);
     }
 
     // alloc size : layout.size, align, type size
     // find an avaliabel : split it
     // I don't know how to use NonNull which is non-null and covariant
-    unsafe fn alloc(&self, layout: Layout) -> Result<*mut usize, ()> {
+    pub unsafe fn alloc(&mut self, layout: Layout) -> Result<*mut usize, ()> {
         let size = get_real_size(layout);
         let class = size.trailing_zeros() as usize;
 
@@ -81,7 +92,7 @@ impl Heap {
         Err(())
     }
 
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+    pub unsafe fn dealloc(&mut self, ptr: *mut u8, layout: Layout) {
         let size = get_real_size(layout);
         let class = size.trailing_zeros() as usize;
 
@@ -114,16 +125,6 @@ impl Heap {
 
         self.user -= layout.size();
         self.real -= size;
-    }
-}
-
-unsafe impl GlobalAlloc for Heap {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        self.alloc(layout).unwrap_or(null_mut() as *mut usize) as *mut u8
-    }
-
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        self.dealloc(ptr, layout)
     }
 }
 
