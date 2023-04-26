@@ -3,6 +3,7 @@ use crate::config::KERNEL_HEAP_SIZE;
 use self::up_safe_allocator::UPSafeHeap;
 
 pub mod buddy_allocator;
+pub mod heap_test;
 pub mod instrusive_linked_list;
 pub mod up_safe_allocator;
 

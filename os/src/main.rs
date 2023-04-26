@@ -14,7 +14,7 @@ mod mm;
 extern crate alloc;
 use alloc::boxed::Box;
 use core::arch::{asm, global_asm};
-use mm::heap_allocator::heap_init;
+use mm::heap_allocator::{heap_init, heap_test::heap_test};
 use riscv::register::{mepc, mideleg, mstatus, satp};
 
 global_asm!(include_str!("entry.S"));
@@ -65,4 +65,5 @@ pub fn kernel_main() -> ! {
 
 pub fn kernel_init() {
     heap_init();
+    heap_test();
 }
