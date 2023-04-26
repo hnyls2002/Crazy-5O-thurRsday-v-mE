@@ -7,12 +7,14 @@ mod console;
 mod config;
 mod kfc_logger;
 mod kfc_sbi;
+mod kfc_util;
 mod lang_items;
 mod mm;
 
 extern crate alloc;
 use alloc::boxed::Box;
 use core::arch::{asm, global_asm};
+use mm::heap_allocator::heap_init;
 use riscv::register::{mepc, mideleg, mstatus, satp};
 
 global_asm!(include_str!("entry.S"));
@@ -52,9 +54,15 @@ pub fn machine_start() -> ! {
 
 #[no_mangle]
 pub fn kernel_main() -> ! {
+    kernel_init();
     println!("\x1b[1;31m{}\x1b[0m", kfc_sbi::LOGO);
     info!("Entering into kernel_main function!");
     info!("uart print test passed!");
     let b = Box::new(42);
+    println!("b is {}", b);
     panic!("\x1b[1;33mshutdown is not implemented yet...\x1b[0m");
+}
+
+pub fn kernel_init() {
+    heap_init();
 }
