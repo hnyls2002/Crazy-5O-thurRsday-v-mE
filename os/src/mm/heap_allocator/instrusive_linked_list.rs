@@ -103,7 +103,7 @@ impl InLinkedList {
 
     pub fn iter_mut(&self) -> IterMut {
         IterMut {
-            prev: ptr::null_mut(),
+            prev: &self.head as *const *mut usize as *mut usize,
             curr: self.head,
         }
     }

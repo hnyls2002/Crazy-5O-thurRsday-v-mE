@@ -1,7 +1,7 @@
 use core::{alloc::Layout, mem::size_of};
 
 use crate::{
-    debug, info,
+    info,
     mm::heap_allocator::{buddy_allocator::Heap, instrusive_linked_list::InLinkedList},
 };
 
@@ -59,10 +59,10 @@ pub fn test_linked_list() {
     assert_eq!(iter.next(), Some(&mut value1 as *mut usize));
     assert_eq!(iter.next(), None);
 
-    debug!("here");
+    // debug!("here");
     // Test iter_mut
     let mut iter_mut = list.iter_mut();
-    debug!("here");
+    // debug!("here");
     assert_eq!(iter_mut.next().unwrap().remove(), &mut value3 as *mut usize);
 
     // Test pop
