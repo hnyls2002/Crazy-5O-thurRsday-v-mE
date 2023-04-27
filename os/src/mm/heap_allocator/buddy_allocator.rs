@@ -75,7 +75,11 @@ impl Heap {
                 for j in (class + 1..i + 1).rev() {
                     if let Some(block) = self.free_list[j].pop() {
                         let half_len = (1 << (j - 1)) as usize;
-                        self.free_list[j - 1].push((block as usize + half_len) as *mut usize);
+                        let mid = (block as usize + half_len) as *mut usize;
+                        let mid1 = unsafe { block.add(half_len) };
+                        // warn!("{:?} - {:?} {}", mid1, mid, mid1 as usize - mid as usize);
+                        assert_ne!(mid, mid1);
+                        self.free_list[j - 1].push((mid) as *mut usize);
                         self.free_list[j - 1].push(block);
                     } else {
                         return Err(());
