@@ -29,8 +29,8 @@ pub struct IterMutNode {
 }
 
 impl IterMutNode {
-    pub unsafe fn remove(&self) -> *mut usize {
-        *self.prev = *self.curr;
+    pub fn remove(&self) -> *mut usize {
+        unsafe { *self.prev = *self.curr };
         self.curr
     }
     pub fn value(&self) -> *mut usize {
@@ -81,17 +81,17 @@ impl InLinkedList {
         self.head.is_null()
     }
 
-    pub unsafe fn push(&mut self, item: *mut usize) {
-        *item = self.head as usize;
+    pub fn push(&mut self, item: *mut usize) {
+        unsafe { *item = self.head as usize };
         self.head = item;
     }
 
-    pub unsafe fn pop(&mut self) -> Option<*mut usize> {
+    pub fn pop(&mut self) -> Option<*mut usize> {
         match self.is_empty() {
             true => None,
             false => {
                 let ret = self.head;
-                self.head = *ret as *mut usize;
+                self.head = unsafe { *ret } as *mut usize;
                 Some(ret)
             }
         }

@@ -65,7 +65,7 @@ impl Heap {
 
     // alloc size : layout.size, align, type size
     // find an avaliabel : split it
-    pub unsafe fn alloc(&mut self, layout: Layout) -> Result<NonNull<u8>, ()> {
+    pub fn alloc(&mut self, layout: Layout) -> Result<NonNull<u8>, ()> {
         let size = get_real_size(layout);
         let class = size.trailing_zeros() as usize;
 
@@ -93,7 +93,7 @@ impl Heap {
         Err(())
     }
 
-    pub unsafe fn dealloc(&mut self, ptr: NonNull<u8>, layout: Layout) {
+    pub fn dealloc(&mut self, ptr: NonNull<u8>, layout: Layout) {
         let size = get_real_size(layout);
         let class = size.trailing_zeros() as usize;
 
