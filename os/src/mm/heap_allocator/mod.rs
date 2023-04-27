@@ -15,8 +15,9 @@ static HEAP_ALLOCATOR: UPSafeHeap = UPSafeHeap::new();
 static mut HEAP_SPACE: [u8; KERNEL_HEAP_SIZE] = [0; KERNEL_HEAP_SIZE];
 
 pub fn heap_init() {
-    let mut heap = HEAP_ALLOCATOR.up_safe_heap.exclusive_access();
     unsafe {
-        heap.init(HEAP_SPACE.as_ptr() as usize, KERNEL_HEAP_SIZE);
-    }
+        HEAP_ALLOCATOR
+            .exclusive_access()
+            .init(HEAP_SPACE.as_ptr() as usize, KERNEL_HEAP_SIZE)
+    };
 }

@@ -1,8 +1,8 @@
-use crate::debug;
+use crate::info;
 
 #[allow(unused)]
 pub fn heap_test() {
-    debug!("begin heap_test");
+    info!("begin heap_test");
     use alloc::boxed::Box;
     use alloc::vec::Vec;
     extern "C" {
@@ -23,5 +23,5 @@ pub fn heap_test() {
     }
     assert!(bss_range.contains(&(v.as_ptr() as usize)));
     drop(v);
-    debug!("heap_test passed!");
+    info!("heap_test passed!");
 }

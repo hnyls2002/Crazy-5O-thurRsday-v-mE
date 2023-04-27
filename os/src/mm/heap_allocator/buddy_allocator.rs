@@ -4,6 +4,7 @@ use core::{
     cmp::{max, min},
     fmt::Debug,
     mem::size_of,
+    ptr::NonNull,
     usize,
 };
 
@@ -64,8 +65,7 @@ impl Heap {
 
     // alloc size : layout.size, align, type size
     // find an avaliabel : split it
-    // I don't know how to use NonNull which is non-null and covariant
-    pub unsafe fn alloc(&mut self, layout: Layout) -> Result<*mut usize, ()> {
+    pub unsafe fn alloc(&mut self, layout: Layout) -> Result<NonNull<u8>, ()> {
         let size = get_real_size(layout);
         let class = size.trailing_zeros() as usize;
 
@@ -75,31 +75,32 @@ impl Heap {
                 for j in (class + 1..i + 1).rev() {
                     if let Some(block) = self.free_list[j].pop() {
                         let half_len = (1 << (j - 1)) as usize;
-                        self.free_list[j - 1].push((block.add(half_len)) as *mut usize);
+                        self.free_list[j - 1].push((block as usize + half_len) as *mut usize);
                         self.free_list[j - 1].push(block);
                     } else {
                         return Err(());
                     }
                 }
                 // split done, return the block
-                let res = self.free_list[class].pop();
+                let res = NonNull::new(self.free_list[class].pop().unwrap() as *mut u8);
+                // let res = NonNull::new(self.free_list[class].pop().unwrap() as *mut u8);
                 assert!(res.is_some());
                 self.user += layout.size();
                 self.real += size;
-                return res.ok_or(());
+                return Ok(res.unwrap());
             }
         }
         Err(())
     }
 
-    pub unsafe fn dealloc(&mut self, ptr: *mut u8, layout: Layout) {
+    pub unsafe fn dealloc(&mut self, ptr: NonNull<u8>, layout: Layout) {
         let size = get_real_size(layout);
         let class = size.trailing_zeros() as usize;
 
-        self.free_list[class].push(ptr as *mut usize);
+        self.free_list[class].push(ptr.as_ptr() as *mut usize);
 
         //merge buddy list
-        let mut cur_ptr = ptr as *mut usize;
+        let mut cur_ptr = ptr.as_ptr() as *mut usize;
         let mut cur_class = class;
         while cur_class < self.free_list.len() {
             let buddy = ((cur_ptr as usize) ^ (1 << cur_class)) as *mut usize;

@@ -12,7 +12,6 @@ mod lang_items;
 mod mm;
 
 extern crate alloc;
-use alloc::boxed::Box;
 use core::arch::{asm, global_asm};
 use mm::heap_allocator::{heap_init, heap_test::heap_test};
 use riscv::register::{mepc, mideleg, mstatus, satp};
@@ -58,8 +57,6 @@ pub fn kernel_main() -> ! {
     println!("\x1b[1;31m{}\x1b[0m", kfc_sbi::LOGO);
     info!("Entering into kernel_main function!");
     info!("uart print test passed!");
-    let b = Box::new(42);
-    println!("b is {}", b);
     panic!("\x1b[1;33mshutdown is not implemented yet...\x1b[0m");
 }
 
