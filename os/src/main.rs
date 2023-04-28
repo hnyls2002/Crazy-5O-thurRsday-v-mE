@@ -16,6 +16,8 @@ use core::arch::{asm, global_asm};
 use mm::heap_allocator::{heap_init, heap_test::heap_test};
 use riscv::register::{mepc, mideleg, mstatus, satp};
 
+use crate::kfc_sbi::sbi_shutdown;
+
 global_asm!(include_str!("entry.S"));
 
 // global/static variables are located in .bss section
@@ -54,10 +56,10 @@ pub fn machine_start() -> ! {
 #[no_mangle]
 pub fn kernel_main() -> ! {
     kernel_init();
-    println!("\x1b[1;31m{}\x1b[0m", kfc_sbi::LOGO);
+    println!("\x1b[34m{}\x1b[0m", kfc_sbi::LOGO);
     info!("Entering into kernel_main function!");
-    info!("uart print test passed!");
-    panic!("\x1b[1;33mshutdown is not implemented yet...\x1b[0m");
+    info!("UART print test passed!");
+    sbi_shutdown(0);
 }
 
 pub fn kernel_init() {

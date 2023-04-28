@@ -1,6 +1,6 @@
 use core::panic::PanicInfo;
 
-use crate::error;
+use crate::{error, kfc_sbi::sbi_shutdown};
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
@@ -14,5 +14,5 @@ fn panic(info: &PanicInfo) -> ! {
     } else {
         error!("Panicked: {}", info.message().unwrap());
     }
-    loop {}
+    sbi_shutdown(1);
 }

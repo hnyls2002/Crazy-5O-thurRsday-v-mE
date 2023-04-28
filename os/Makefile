@@ -1,4 +1,4 @@
-LOG ?= NoneLog
+LOG ?= Info
 
 build:
 	@cargo build --release --features $(LOG)
