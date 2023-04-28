@@ -15,3 +15,6 @@ Warn = ["Error"]
 Debug = ["Warn"]
 Info = ["Debug"]
 Trace = ["Info"]
+
+[profile.release]
+debug = true

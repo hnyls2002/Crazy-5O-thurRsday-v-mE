@@ -55,10 +55,10 @@ pub fn machine_start() -> ! {
 
 #[no_mangle]
 pub fn kernel_main() -> ! {
-    kernel_init();
-    println!("\x1b[34m{}\x1b[0m", kfc_sbi::LOGO);
     info!("Entering into kernel_main function!");
     info!("UART print test passed!");
+    println!("\x1b[34m{}\x1b[0m", kfc_sbi::LOGO);
+    kernel_init();
     sbi_shutdown(0);
 }
 

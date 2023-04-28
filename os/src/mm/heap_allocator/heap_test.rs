@@ -29,7 +29,6 @@ pub fn heap_test() {
     assert!(bss_range.contains(&(v.as_ptr() as usize)));
     drop(v);
     test_linked_list();
-    test_linked_list();
     test_empty_heap();
     test_heap_add();
     test_heap_oom();
