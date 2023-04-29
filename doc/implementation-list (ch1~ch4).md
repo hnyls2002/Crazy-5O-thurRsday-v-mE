@@ -1,21 +1,21 @@
 ## Implementation List
 
-- [ ] address and page num struct
+- [x] address and page num struct
  - mutually transform methods
-- [ ] PTE struct
+- [x] PTE struct
  - with `ppn` field and `flags` field
-- [ ] fram allocator : stack based
+- [x] fram allocator : stack based
  - `alloc` and `dealloc` methods
  - global frame allocator instance
 
 **RAII : Resource Acquisition Is Initialization**
 
-- [ ] RAII based `frameTracker`
+- [x] RAII based `frameTracker`
  - `drop` method is needed
  - *each page table is a frame*, which is RAII by `frameTracker`
  - *frame (original meaning) is just a physical page*, which is RAII by `frameTracker`
 
-- [ ] SV39 page table
+- [x] SV39 page table
  - All *page table* managed by `frameTracker`  
  - `map` and `unmap` method for page table
  - PTE/phy page/phy memory visiting methods

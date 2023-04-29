@@ -1,7 +1,10 @@
 use alloc::vec::Vec;
 use lazy_static::lazy_static;
 
-use crate::{config::MEMORY_END, kfc_util::up_safe_cell::UPSafeCell};
+use crate::{
+    config::{MEMORY_END, PAGE_SIZE},
+    kfc_util::up_safe_cell::UPSafeCell,
+};
 
 use super::{address::PhysAddr, page::Frame};
 
@@ -17,11 +20,11 @@ pub struct StackFrameAllocator {
 }
 
 impl StackFrameAllocator {
-    pub fn new_from_addr(top_addr: PhysAddr, bottom_addr: PhysAddr) -> Self {
+    pub fn new(top: Frame, bottom: Frame) -> Self {
         StackFrameAllocator {
             recycled: Vec::new(),
-            top: top_addr.floor(),
-            bottom: bottom_addr.ceil(),
+            top,
+            bottom,
         }
     }
 }
@@ -54,17 +57,19 @@ extern "C" {
 
 lazy_static! {
     static ref FRAME_ALLOCATOR: UPSafeCell<StackFrameAllocator> =
-        UPSafeCell::new(StackFrameAllocator::new_from_addr(
-            PhysAddr::new(ekernel as usize),
-            PhysAddr::new(MEMORY_END),
+        UPSafeCell::new(StackFrameAllocator::new(
+            PhysAddr(ekernel as usize).ceil_frame(),
+            PhysAddr(MEMORY_END).floor_frame(),
         ));
 }
 
 // RAII : Resource Acquisition Is Initialization
 // get resource : frame_alloc -> a frame tracker
 // release resource : drop(frame_tracker) -> fram_dealloc
+// so no Copy or Clone traits here
 
-pub struct FrameTracker(Frame);
+
+pub struct FrameTracker(pub Frame);
 
 impl FrameTracker {
     pub fn new(pp: Frame) -> Self {
@@ -83,7 +88,12 @@ pub fn frame_alloc() -> Option<FrameTracker> {
     if let Err(()) = res {
         panic!("Frame allocation failed!");
     }
-    Some(FrameTracker(res.ok().unwrap()))
+    let res_frame = res.ok().unwrap();
+    let bytes_array_mut = res_frame.get_bytes_array_mut();
+    for i in 0..PAGE_SIZE {
+        bytes_array_mut[i] = 0;
+    }
+    Some(FrameTracker(res_frame))
 }
 
 pub fn frame_dealloc(ft: &mut FrameTracker) {
