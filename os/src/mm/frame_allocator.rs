@@ -6,7 +6,7 @@ use crate::{
     kfc_util::up_safe_cell::UPSafeCell,
 };
 
-use super::{address::PhysAddr, page::Frame};
+use super::{Frame, PhysAddr};
 
 pub trait FrameAllocator {
     fn alloc(&mut self) -> Result<Frame, ()>;
@@ -67,7 +67,6 @@ lazy_static! {
 // get resource : frame_alloc -> a frame tracker
 // release resource : drop(frame_tracker) -> fram_dealloc
 // so no Copy or Clone traits here
-
 
 pub struct FrameTracker(pub Frame);
 

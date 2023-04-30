@@ -1,6 +1,6 @@
 use crate::config::PAGE_SIZE;
 
-use super::page::Frame;
+use super::Frame;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct VirtAddr(pub usize);
