@@ -4,7 +4,7 @@ use riscv::addr::BitField;
 
 use crate::config::{PAGE_SIZE, PPN_RANGE, PTE_NUM, SV39_INDEX_BITS, SV39_INDEX_START};
 
-use super::PTE;
+use super::{VirtAddr, PTE};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Page(pub usize);
@@ -59,8 +59,11 @@ pub struct Iter {
 }
 
 impl VPRange {
-    pub fn new(start: Page, end: Page) -> Self {
-        Self { start, end }
+    pub fn new(start_addr: VirtAddr, end_addr: VirtAddr) -> Self {
+        Self {
+            start: start_addr.floor_page(),
+            end: end_addr.ceil_page(),
+        }
     }
 
     pub fn iter(&self) -> Iter {

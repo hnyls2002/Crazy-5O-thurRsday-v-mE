@@ -1,6 +1,6 @@
 use crate::config::PAGE_SIZE;
 
-use super::Frame;
+use super::{Frame, Page};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct VirtAddr(pub usize);
@@ -16,7 +16,14 @@ pub fn align_up(addr: usize, align: usize) -> usize {
     align_down(addr + align - 1, align)
 }
 
-impl VirtAddr {}
+impl VirtAddr {
+    pub fn floor_page(&self) -> Page {
+        Page(align_down(self.0, PAGE_SIZE))
+    }
+    pub fn ceil_page(&self) -> Page {
+        Page(align_up(self.0, PAGE_SIZE))
+    }
+}
 
 impl PhysAddr {
     pub fn floor_frame(&self) -> Frame {

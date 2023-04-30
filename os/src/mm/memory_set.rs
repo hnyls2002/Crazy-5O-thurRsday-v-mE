@@ -1,3 +1,5 @@
+use core::fmt::Debug;
+
 use alloc::{collections::BTreeMap, vec::Vec};
 use bitflags::bitflags;
 
@@ -15,6 +17,17 @@ bitflags! {
 pub enum MapType {
     Identical,
     Framed,
+    Linear,
+}
+
+impl Debug for MapType {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Identical => write!(f, "Identical"),
+            Self::Framed => write!(f, "Framed"),
+            Self::Linear => write!(f, "Linear"),
+        }
+    }
 }
 
 pub struct MapArea {
@@ -24,15 +37,20 @@ pub struct MapArea {
     pub map_type: MapType,
 }
 
+impl Debug for MapArea {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("MapArea")
+            .field("vp_range", &self.vp_range)
+            .field("map_perm", &self.map_perm)
+            .field("map_type", &self.map_type)
+            .finish()
+    }
+}
+
 impl PartialEq for MapArea {
     fn eq(&self, other: &Self) -> bool {
         self.vp_range == other.vp_range
     }
-}
-
-pub struct MemorySet {
-    pub map_areas: Vec<MapArea>,
-    pub page_table: PageTable,
 }
 
 impl MapArea {
@@ -52,13 +70,20 @@ impl MapArea {
     }
 }
 
+pub struct MemorySet {
+    pub map_areas: Vec<MapArea>,
+    pub page_table: PageTable,
+}
+
 impl MemorySet {
+    // only page table root is set
     pub fn new() -> Self {
         MemorySet {
             map_areas: Vec::new(),
             page_table: PageTable::new(),
         }
     }
+
     pub fn add_map_area(&mut self, map_area: MapArea) {
         let vp_range = &map_area.vp_range;
         let pte_flags = PTEFlags::from_bits(map_area.map_perm.bits()).unwrap();
@@ -73,6 +98,7 @@ impl MemorySet {
         }
         self.map_areas.push(map_area);
     }
+
     pub fn release_map_area(&mut self, vp_range: &VPRange) {
         let index = self
             .map_areas

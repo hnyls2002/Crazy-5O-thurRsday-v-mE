@@ -23,7 +23,7 @@
 
 **Memory set is a new level of abstraction, which I thought is actually the same as address space.**
 
-- [ ] `MapArea`
+- [x] `MapArea`
  - *Sequential Virtual Address* in a address space
  - All physical resources are managed by `frameTracker`
  - Different mapping strategies
@@ -33,14 +33,14 @@
  - `permission` for all frames in this area
 
 
-- [ ] `MemorySet` : *address space*
+- [x] `MemorySet` : *address space*
  - `Vec<MapArea>` for all physical memory resources
  - `PageTable` for a tree of page table
 
 **Kernel's and User's address space should be initialized**
 
-- [ ] Figure out *kernel address space layout* and *user address space layout*
-- [ ] `kernel_space_init()`
+- [x] Figure out *kernel address space layout* and *user address space layout*
+- [x] `kernel_space_init()`
 - [ ] `new_user_space()` for a single application
 
 **Some implementation for user (application)**
