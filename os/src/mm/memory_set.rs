@@ -1,3 +1,5 @@
+use core::arch::asm;
+
 use alloc::vec::Vec;
 use lazy_static::lazy_static;
 use riscv::register::satp;
@@ -122,7 +124,8 @@ pub fn activate_kernel_space() {
         .exclusive_access()
         .get_pt_root_frame()
         .get_ppn();
-    unsafe { satp::set(satp::Mode::Sv39, 0, ppn) };
-    // TODO : asid
-    // TODO : memory barrierj...
+    unsafe {
+        satp::set(satp::Mode::Sv39, 0, ppn);
+        asm!("sfence.vma");
+    };
 }
