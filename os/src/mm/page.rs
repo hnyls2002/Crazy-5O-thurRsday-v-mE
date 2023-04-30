@@ -12,6 +12,18 @@ pub struct Page(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Frame(pub usize);
 
+impl Into<Frame> for Page {
+    fn into(self) -> Frame {
+        Frame(self.0)
+    }
+}
+
+impl Into<Page> for Frame {
+    fn into(self) -> Page {
+        Page(self.0)
+    }
+}
+
 impl Page {
     pub fn get_indices(&self) -> [usize; 3] {
         let s = SV39_INDEX_START;

@@ -51,9 +51,9 @@ impl PTE {
 }
 
 pub struct PageTable {
-    entry: Frame,
+    pub entry: Frame,
     // all the frames are stored in nodes including root
-    pt_frames: Vec<FrameTracker>,
+    pub pt_frames: Vec<FrameTracker>,
 }
 
 impl PageTable {

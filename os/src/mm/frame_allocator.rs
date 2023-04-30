@@ -62,12 +62,6 @@ impl FrameAllocator for StackFrameAllocator {
 /// - so no `Copy` or `Clone` traits here
 pub struct FrameTracker(pub Frame);
 
-impl FrameTracker {
-    pub fn new(pp: Frame) -> Self {
-        FrameTracker(pp)
-    }
-}
-
 impl Drop for FrameTracker {
     fn drop(&mut self) {
         frame_dealloc(self);
