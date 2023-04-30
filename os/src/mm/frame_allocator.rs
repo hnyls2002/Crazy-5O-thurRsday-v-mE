@@ -70,9 +70,7 @@ impl Drop for FrameTracker {
 
 pub fn frame_alloc() -> Option<FrameTracker> {
     let res = FRAME_ALLOCATOR.exclusive_access().alloc();
-    if let Err(()) = res {
-        panic!("Frame allocation failed!");
-    }
+    assert!(res.is_ok(), "Frame allocation failed!");
     let res_frame = res.ok().unwrap();
     let bytes_array_mut = res_frame.get_bytes_array_mut();
     for i in 0..PAGE_SIZE {
@@ -83,9 +81,7 @@ pub fn frame_alloc() -> Option<FrameTracker> {
 
 pub fn frame_dealloc(ft: &mut FrameTracker) {
     let res = FRAME_ALLOCATOR.exclusive_access().dealloc(ft.0);
-    if res.is_err() {
-        panic!("Frame deallocation failed!");
-    }
+    assert!(res.is_ok(), "Frame deallocation failed!");
 }
 
 lazy_static! {

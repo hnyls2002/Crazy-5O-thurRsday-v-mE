@@ -36,9 +36,7 @@ impl MemorySet {
             let vp = it.value();
             let pp = map_area.get_framed(vp);
             let res = self.page_table.map_one(vp, pp, pte_flags);
-            if let Err(_) = res {
-                panic!("virtual page mapping to physical page failed");
-            }
+            assert!(res.is_ok(), "virtual page mapping to physical page failed");
         }
 
         self.map_areas.push(map_area);

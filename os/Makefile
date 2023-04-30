@@ -1,4 +1,4 @@
-LOG ?= Info
+LOG ?= Trace
 
 build:
 	@cargo build --release --features $(LOG)
