@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use lazy_static::lazy_static;
 use riscv::register::satp;
 
-use crate::{config::MEMORY_END, kfc_util::up_safe_cell::UPSafeCell};
+use crate::{config::MEMORY_END, info, kfc_util::up_safe_cell::UPSafeCell};
 
 use super::{Frame, MapArea, MapPerm, MapType, PTEFlags, PageTable, VPRange, VirtAddr};
 
@@ -75,6 +75,26 @@ impl MemorySet {
     pub fn new_kernel_space() -> Self {
         // TODO : trampoline to be set...
         let mut memory_set = MemorySet::new();
+
+        info!("-----------------------kernel space-----------------------");
+        info!(
+            ".text\t\t\t\t[{:#X?}, {:#X?})",
+            stext as usize, etext as usize
+        );
+        info!(
+            ".rodata\t\t\t\t[{:#X?}, {:#X?})",
+            srodata as usize, erodata as usize
+        );
+        info!(
+            ".data\t\t\t\t[{:#X?}, {:#X?})",
+            sdata as usize, edata as usize
+        );
+        info!(".bss\t\t\t\t[{:#X?}, {:#X?})", sbss as usize, ebss as usize);
+        info!(
+            "frame pool\t\t\t[{:#X?}, {:#X?})",
+            ekernel as usize, MEMORY_END as usize
+        );
+        info!("-----------------------kernel space-----------------------");
 
         // .text
         let text = MapArea::new_bare(
