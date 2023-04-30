@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use lazy_static::lazy_static;
 use riscv::register::satp;
 
-use crate::{kfc_util::up_safe_cell::UPSafeCell};
+use crate::{config::MEMORY_END, debug, kfc_util::up_safe_cell::UPSafeCell, trace};
 
 use super::{Frame, MapArea, MapPerm, MapType, PTEFlags, PageTable, VPRange, VirtAddr};
 
@@ -112,13 +112,13 @@ impl MemorySet {
 
         // available physical frames
         let pool = MapArea::new_bare(
-            VPRange::new(VirtAddr(skernel as usize), VirtAddr(ekernel as usize)),
+            VPRange::new(VirtAddr(ekernel as usize), VirtAddr(MEMORY_END as usize)),
             MapType::Identical,
             MapPerm::R | MapPerm::W,
         );
+        // trace!("insert pool into kernel space");
         memory_set.insert_new_map_area(pool);
-
-        todo!()
+        memory_set
     }
 }
 

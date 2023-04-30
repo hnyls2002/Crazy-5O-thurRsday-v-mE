@@ -4,6 +4,7 @@ use crate::{
         memory_set::{ebss, sbss},
         PTEFlags,
     },
+    trace,
 };
 
 use super::{
