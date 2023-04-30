@@ -20,12 +20,16 @@ pub struct StackFrameAllocator {
 }
 
 impl StackFrameAllocator {
-    pub fn new(top: Frame, bottom: Frame) -> Self {
+    pub fn new_empty() -> Self {
         StackFrameAllocator {
+            top: Frame(0),
+            bottom: Frame(0),
             recycled: Vec::new(),
-            top,
-            bottom,
         }
+    }
+    pub fn init(&mut self, top: Frame, bottom: Frame) {
+        self.top = top;
+        self.bottom = bottom;
     }
 }
 
@@ -51,23 +55,11 @@ impl FrameAllocator for StackFrameAllocator {
     }
 }
 
-extern "C" {
-    fn ekernel();
-}
-
-lazy_static! {
-    static ref FRAME_ALLOCATOR: UPSafeCell<StackFrameAllocator> =
-        UPSafeCell::new(StackFrameAllocator::new(
-            PhysAddr(ekernel as usize).ceil_frame(),
-            PhysAddr(MEMORY_END).floor_frame(),
-        ));
-}
-
-// RAII : Resource Acquisition Is Initialization
-// get resource : frame_alloc -> a frame tracker
-// release resource : drop(frame_tracker) -> fram_dealloc
-// so no Copy or Clone traits here
-
+/// ### RAII : Resource Acquisition Is Initialization
+///
+/// - get resource : `frame_alloc` -> `FrameTracker`
+/// - release resource : `drop(FrameTracker)` -> `frame_dealloc`
+/// - so no `Copy` or `Clone` traits here
 pub struct FrameTracker(pub Frame);
 
 impl FrameTracker {
@@ -100,4 +92,20 @@ pub fn frame_dealloc(ft: &mut FrameTracker) {
     if res.is_err() {
         panic!("Frame deallocation failed!");
     }
+}
+
+lazy_static! {
+    static ref FRAME_ALLOCATOR: UPSafeCell<StackFrameAllocator> =
+        UPSafeCell::new(StackFrameAllocator::new_empty());
+}
+
+extern "C" {
+    fn ekernel();
+}
+
+pub fn frame_allocator_init() {
+    FRAME_ALLOCATOR.exclusive_access().init(
+        PhysAddr(ekernel as usize).ceil_frame(),
+        PhysAddr(MEMORY_END).floor_frame(),
+    )
 }
