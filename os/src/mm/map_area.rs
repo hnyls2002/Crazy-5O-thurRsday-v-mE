@@ -57,6 +57,7 @@ impl PartialEq for MapArea {
 impl MapArea {
     /// ### no bounded to physical frames
     pub fn new_bare(vp_range: VPRange, map_type: MapType, map_perm: MapPerm) -> Self {
+        // trace!("new_bare: vp_range={:x?}", vp_range);
         MapArea {
             mem_frames: BTreeMap::new(),
             vp_range,

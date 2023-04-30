@@ -38,6 +38,8 @@ impl FrameAllocator for StackFrameAllocator {
         if !self.recycled.is_empty() {
             return Ok(self.recycled.pop().unwrap());
         }
+        // trace!("start : {:#X?}", self.start);
+        // trace!("end : alloc frame : {:#X?}", self.end);
         if self.start < self.end {
             let ret = self.start;
             self.start = self.start.next_page();

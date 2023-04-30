@@ -2,9 +2,9 @@ use alloc::vec::Vec;
 use bitflags::bitflags;
 use riscv::addr::BitField;
 
-use crate::config::{PAGE_SIZE_BITS, PPN_RANGE};
+use crate::config::{PAGE_SIZE_BITS, PPN_RANGE, PTE_FLAGS_MASK};
 
-use super::{frame_alloc, Frame, FrameTracker, Page, PhysAddr, VirtAddr};
+use super::{frame_alloc, Frame, FrameTracker, Page};
 
 bitflags! {
     pub struct PTEFlags : usize{
@@ -25,7 +25,7 @@ pub struct PTE(usize);
 impl PTE {
     pub fn map_frame(&mut self, phys_page: Frame, flags: PTEFlags) {
         self.0.set_bits(PPN_RANGE, phys_page.get_ppn());
-        self.set_flags(flags)
+        self.set_flags(flags);
     }
 
     pub fn get_frame(&self) -> Frame {
@@ -33,11 +33,14 @@ impl PTE {
     }
 
     pub fn get_flags(&self) -> PTEFlags {
-        PTEFlags::from_bits(self.0).unwrap()
+        PTEFlags::from_bits(self.0 & PTE_FLAGS_MASK).unwrap()
     }
 
     pub fn set_flags(&mut self, flags: PTEFlags) {
+        // warn!("set_flags: {:#x?}", flags);
         self.0 |= flags.bits;
+        // warn!("bits : {:#x?}", self.0);
+        // warn!("get_flags: {:#x?}", self.get_flags());
     }
 
     pub fn clear_flags(&mut self, flags: PTEFlags) {
@@ -93,12 +96,16 @@ impl PageTable {
         let mut cur_frame = self.entry.clone();
         let indices = vp.get_indices();
 
+        // debug!("find_create_pte_mut: {:x?}", indices);
         for i in 0..2 {
             let pte = &mut cur_frame.get_pte_array_mut()[indices[i]];
             // not valid, create a new page table
+            // debug!("cur frame: {:X?}", cur_frame);
             if !pte.is_valid() {
                 let new_frame = frame_alloc().unwrap();
+                // debug!("new frame: {:X?}", new_frame.0);
                 pte.map_frame(new_frame.0, PTEFlags::V);
+                // debug!("valid after map : {:?}", pte.is_valid());
                 self.pt_frames.push(new_frame);
             }
             cur_frame = pte.get_frame();
@@ -123,6 +130,7 @@ impl PageTable {
     }
 
     pub fn map_one(&mut self, vp: Page, pp: Frame, flags: PTEFlags) -> Result<(), ()> {
+        // debug!("map_one: {:x?} {:x?} {:x?}", vp, pp, flags);
         let pte = self.find_create_pte_mut(vp).unwrap();
         if pte.is_valid() {
             Err(())

@@ -1,6 +1,9 @@
-use crate::mm::{
-    memory_set::{ebss, sbss},
-    PTEFlags,
+use crate::{
+    info,
+    mm::{
+        memory_set::{ebss, sbss},
+        PTEFlags,
+    },
 };
 
 use super::{
@@ -9,6 +12,8 @@ use super::{
 };
 
 pub fn remap_test() {
+    info!("remap_test start!");
+
     let page_table = &KERNEL_SPACE.exclusive_access().page_table;
     let mid_text_vp = VirtAddr((stext as usize + etext as usize) >> 1).floor_page();
     let mid_rodata_vp = VirtAddr((srodata as usize + erodata as usize) >> 1).floor_page();
@@ -45,5 +50,7 @@ pub fn remap_test() {
             .expect("failed to find .bss pte")
             .get_flags()
             == PTEFlags::R | PTEFlags::W
-    )
+    );
+
+    info!("remap_test passed!");
 }

@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use lazy_static::lazy_static;
 use riscv::register::satp;
 
-use crate::kfc_util::up_safe_cell::UPSafeCell;
+use crate::{kfc_util::up_safe_cell::UPSafeCell};
 
 use super::{Frame, MapArea, MapPerm, MapType, PTEFlags, PageTable, VPRange, VirtAddr};
 
@@ -32,9 +32,11 @@ impl MemorySet {
         let pte_flags = PTEFlags::from_bits(map_area.map_perm.bits()).unwrap();
         // TODO : PTE flags may have other flags to be set
 
+        // trace!("insert new map area : {:#X?}", map_area);
         for it in vp_range.iter() {
             let vp = it.value();
             let pp = map_area.get_framed(vp);
+            // trace!("vp={:#X?}, pp={:#X?}", vp, pp);
             let res = self.page_table.map_one(vp, pp, pte_flags);
             assert!(res.is_ok(), "virtual page mapping to physical page failed");
         }
@@ -104,7 +106,9 @@ impl MemorySet {
             MapType::Identical,
             MapPerm::R | MapPerm::W,
         );
+        // debug!("insert bss into kernel space");
         memory_set.insert_new_map_area(bss);
+        // trace!("after bss");
 
         // available physical frames
         let pool = MapArea::new_bare(

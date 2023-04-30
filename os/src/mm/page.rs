@@ -29,9 +29,9 @@ impl Page {
         let s = SV39_INDEX_START;
         let t = SV39_INDEX_BITS;
         [
-            self.0.get_bits(s..s + t),
-            self.0.get_bits(s + t..s + 2 * t),
             self.0.get_bits(s + 2 * t..s + 3 * t),
+            self.0.get_bits(s + t..s + 2 * t),
+            self.0.get_bits(s..s + t),
         ]
     }
     pub fn next_page(&self) -> Self {

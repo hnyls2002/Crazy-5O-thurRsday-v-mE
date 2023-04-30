@@ -7,7 +7,7 @@ use crate::{
 
 #[allow(unused)]
 pub fn heap_test() {
-    info!("begin heap_test");
+    info!("heap test start!");
     use alloc::boxed::Box;
     use alloc::vec::Vec;
     extern "C" {
@@ -33,7 +33,7 @@ pub fn heap_test() {
     test_heap_add();
     test_heap_oom();
     test_heap_alloc_and_free();
-    info!("heap_test passed!");
+    info!("heap test passed!");
 }
 
 pub fn test_linked_list() {
