@@ -53,7 +53,7 @@ impl PTE {
 pub struct PageTable {
     entry: Frame,
     // all the frames are stored in nodes including root
-    source: Vec<FrameTracker>,
+    pt_frames: Vec<FrameTracker>,
 }
 
 impl PageTable {
@@ -64,7 +64,7 @@ impl PageTable {
         srcs.push(rt_ft);
         PageTable {
             entry: rt_frame,
-            source: srcs,
+            pt_frames: srcs,
         }
     }
     pub fn map_one(&mut self, vp: Page, pp: Frame, flags: PTEFlags) -> Result<(), ()> {
@@ -77,7 +77,7 @@ impl PageTable {
             if !pte.is_valid() {
                 let new_frame = frame_alloc().unwrap();
                 pte.bound_frame(new_frame.0, PTEFlags::V);
-                self.source.push(new_frame);
+                self.pt_frames.push(new_frame);
             }
             cur_frame = pte.get_frame();
         }

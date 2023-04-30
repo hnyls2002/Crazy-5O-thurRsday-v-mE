@@ -1,14 +1,28 @@
-## Implementation List
+## Implementation
 
-- [x] address and page num struct
- - mutually transform methods
-- [x] PTE struct
+#### Address Space
+
+Some Principles
+- RAII : Resource Acquisition Is Initialization
+- Memory set is a new level of abstraction, which I thought is actually the same as address space.
+
+Implementation Details
+- `FrameTacker` manage the source of physical memory. The frames will be free when `FrameTracker` is dropped.
+- page table's frame is managed by `PageTable.pt_frames` field.
+- physical memory source is managed by `MapArea.mem_frames` field.
+  - **`Identical` mapping strategy sources don't need to be managed**
+  - They don't acquire physical memory from frame allocator.
+  - *available frames section* need to be used by others...
+
+Some structs and methods
+
+- [x] `Page`,`Frame`
+- [x] `VirtAddr`,`PhysAddr`
+- [x] `PTE` struct
  - with `ppn` field and `flags` field
 - [x] fram allocator : stack based
  - `alloc` and `dealloc` methods
  - global frame allocator instance
-
-**RAII : Resource Acquisition Is Initialization**
 
 - [x] RAII based `frameTracker`
  - `drop` method is needed
@@ -21,7 +35,6 @@
  - PTE/phy page/phy memory visiting methods
  - phy page visiting method *from different address space*
 
-**Memory set is a new level of abstraction, which I thought is actually the same as address space.**
 
 - [x] `MapArea`
  - *Sequential Virtual Address* in a address space
@@ -37,11 +50,11 @@
  - `Vec<MapArea>` for all physical memory resources
  - `PageTable` for a tree of page table
 
-**Kernel's and User's address space should be initialized**
-
 - [x] Figure out *kernel address space layout* and *user address space layout*
 - [x] `kernel_space_init()`
 - [ ] `new_user_space()` for a single application
+
+#### Tasks(User) Related
 
 **Some implementation for user (application)**
 

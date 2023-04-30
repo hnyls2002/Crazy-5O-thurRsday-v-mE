@@ -32,7 +32,7 @@ impl Debug for MapType {
 
 pub struct MapArea {
     pub vp_range: VPRange,
-    pub source: BTreeMap<Page, FrameTracker>,
+    pub mem_frames: BTreeMap<Page, FrameTracker>,
     pub map_perm: MapPerm,
     pub map_type: MapType,
 }
@@ -63,7 +63,7 @@ impl MapArea {
         }
         MapArea {
             vp_range,
-            source,
+            mem_frames: source,
             map_perm,
             map_type,
         }
@@ -90,7 +90,7 @@ impl MemorySet {
         // TODO : PTE flags may have other flags to be set
         for it in vp_range.iter() {
             let vp = it.value();
-            let pp = map_area.source.get(&vp).unwrap();
+            let pp = map_area.mem_frames.get(&vp).unwrap();
             let res = self.page_table.map_one(vp, pp.0, pte_flags);
             if let Err(_) = res {
                 panic!("virtual page mapping to physical page failed");
