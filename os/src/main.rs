@@ -13,7 +13,7 @@ mod mm;
 
 extern crate alloc;
 use core::arch::{asm, global_asm};
-use mm::{activate_kernel_space, frame_allocator_init, heap_init, heap_test};
+use mm::{activate_kernel_space, frame_allocator_init, heap_init, heap_test, mm_test};
 use riscv::register::{mepc, mideleg, mstatus, satp};
 
 use crate::kfc_sbi::sbi_shutdown;
@@ -69,5 +69,7 @@ pub fn kernel_init() {
 
     // physical frame allocator
     frame_allocator_init();
+
+    mm_test::remap_test();
     activate_kernel_space();
 }

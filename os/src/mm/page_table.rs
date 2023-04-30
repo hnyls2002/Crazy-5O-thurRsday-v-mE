@@ -4,7 +4,7 @@ use riscv::addr::BitField;
 
 use crate::config::{PAGE_SIZE_BITS, PPN_RANGE};
 
-use super::{frame_alloc, Frame, FrameTracker, Page};
+use super::{frame_alloc, Frame, FrameTracker, Page, PhysAddr, VirtAddr};
 
 bitflags! {
     pub struct PTEFlags : usize{
@@ -23,7 +23,7 @@ bitflags! {
 pub struct PTE(usize);
 
 impl PTE {
-    pub fn bound_frame(&mut self, phys_page: Frame, flags: PTEFlags) {
+    pub fn map_frame(&mut self, phys_page: Frame, flags: PTEFlags) {
         self.0.set_bits(PPN_RANGE, phys_page.get_ppn());
         self.set_flags(flags)
     }
@@ -45,8 +45,29 @@ impl PTE {
     }
 
     // some methods for convinence
+    #[allow(dead_code)]
     pub fn is_valid(&self) -> bool {
         (self.get_flags() & PTEFlags::V) != PTEFlags::empty()
+    }
+
+    #[allow(dead_code)]
+    pub fn is_readable(&self) -> bool {
+        (self.get_flags() & PTEFlags::R) != PTEFlags::empty()
+    }
+
+    #[allow(dead_code)]
+    pub fn is_writable(&self) -> bool {
+        (self.get_flags() & PTEFlags::W) != PTEFlags::empty()
+    }
+
+    #[allow(dead_code)]
+    pub fn is_executable(&self) -> bool {
+        (self.get_flags() & PTEFlags::X) != PTEFlags::empty()
+    }
+
+    #[allow(dead_code)]
+    pub fn is_user(&self) -> bool {
+        (self.get_flags() & PTEFlags::U) != PTEFlags::empty()
     }
 }
 
@@ -67,7 +88,8 @@ impl PageTable {
             pt_frames: srcs,
         }
     }
-    pub fn map_one(&mut self, vp: Page, pp: Frame, flags: PTEFlags) -> Result<(), ()> {
+
+    pub fn find_create_pte_mut(&mut self, vp: Page) -> Option<&mut PTE> {
         let mut cur_frame = self.entry.clone();
         let indices = vp.get_indices();
 
@@ -76,32 +98,51 @@ impl PageTable {
             // not valid, create a new page table
             if !pte.is_valid() {
                 let new_frame = frame_alloc().unwrap();
-                pte.bound_frame(new_frame.0, PTEFlags::V);
+                pte.map_frame(new_frame.0, PTEFlags::V);
                 self.pt_frames.push(new_frame);
             }
             cur_frame = pte.get_frame();
         }
 
         let last_pte = &mut cur_frame.get_pte_array_mut()[indices[2]];
-        if last_pte.is_valid() {
-            return Err(());
-        }
-        last_pte.bound_frame(pp, flags | PTEFlags::V);
-        Ok(())
+        Some(last_pte)
     }
-    pub fn unmap_one(&mut self, vp: Page) -> Result<(), ()> {
+
+    pub fn find_pte_mut(&self, vp: Page) -> Option<&mut PTE> {
         let mut cur_frame = self.entry.clone();
         let indices = vp.get_indices();
         for i in 0..2 {
             let pte = &cur_frame.get_pte_array_mut()[indices[i]];
+            if !pte.is_valid() {
+                return None;
+            }
             cur_frame = pte.get_frame();
         }
         let last_pte = &mut cur_frame.get_pte_array_mut()[indices[2]];
-        if last_pte.is_valid() {
-            last_pte.clear_flags(PTEFlags::V);
+        Some(last_pte)
+    }
+
+    pub fn map_one(&mut self, vp: Page, pp: Frame, flags: PTEFlags) -> Result<(), ()> {
+        let pte = self.find_create_pte_mut(vp).unwrap();
+        if pte.is_valid() {
+            Err(())
+        } else {
+            pte.map_frame(pp, flags | PTEFlags::V);
+            Ok(())
+        }
+    }
+
+    pub fn unmap_one(&mut self, vp: Page) -> Result<(), ()> {
+        let pte = self.find_pte_mut(vp).unwrap();
+        if pte.is_valid() {
+            pte.clear_flags(PTEFlags::V);
             Ok(())
         } else {
             Err(())
         }
+    }
+
+    pub fn find_pte(&self, vp: Page) -> Option<&PTE> {
+        self.find_pte_mut(vp).map_or(None, |pte| Some(pte))
     }
 }

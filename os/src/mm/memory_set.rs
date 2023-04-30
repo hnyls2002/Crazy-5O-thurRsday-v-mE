@@ -52,22 +52,23 @@ impl MemorySet {
 
 #[allow(unused)]
 extern "C" {
-    fn stext();
-    fn etext();
-    fn srodata();
-    fn erodata();
-    fn sdata();
-    fn edata();
-    fn sbss_with_stack();
-    fn sbss();
-    fn ebss();
-    fn skernel();
-    fn ekernel();
-    fn strampoline();
+    pub fn stext();
+    pub fn etext();
+    pub fn srodata();
+    pub fn erodata();
+    pub fn sdata();
+    pub fn edata();
+    pub fn sbss_with_stack();
+    pub fn sbss();
+    pub fn ebss();
+    pub fn skernel();
+    pub fn ekernel();
+    pub fn strampoline();
 }
 
 lazy_static! {
-    static ref KERNEL_SPACE: UPSafeCell<MemorySet> = UPSafeCell::new(MemorySet::new_kernel_space());
+    pub static ref KERNEL_SPACE: UPSafeCell<MemorySet> =
+        UPSafeCell::new(MemorySet::new_kernel_space());
 }
 
 impl MemorySet {
