@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use lazy_static::lazy_static;
 use riscv::register::satp;
 
-use crate::{config::MEMORY_END, debug, kfc_util::up_safe_cell::UPSafeCell, trace};
+use crate::{config::MEMORY_END, kfc_util::up_safe_cell::UPSafeCell};
 
 use super::{Frame, MapArea, MapPerm, MapType, PTEFlags, PageTable, VPRange, VirtAddr};
 

@@ -4,7 +4,6 @@ use crate::{
         memory_set::{ebss, sbss},
         PTEFlags,
     },
-    trace,
 };
 
 use super::{
@@ -26,7 +25,8 @@ pub fn remap_test() {
             .find_pte(mid_text_vp)
             .expect("failed to find .text pte")
             .get_flags()
-            == (PTEFlags::R | PTEFlags::X)
+            == (PTEFlags::V | PTEFlags::R | PTEFlags::X),
+        "text permission error"
     );
 
     assert!(
@@ -34,7 +34,8 @@ pub fn remap_test() {
             .find_pte(mid_rodata_vp)
             .expect("failed to find .rodata pte")
             .get_flags()
-            == PTEFlags::R
+            == PTEFlags::V | PTEFlags::R,
+        "rodata permission error"
     );
 
     assert!(
@@ -42,7 +43,8 @@ pub fn remap_test() {
             .find_pte(mid_data_vp)
             .expect("failed to find .data pte")
             .get_flags()
-            == PTEFlags::R | PTEFlags::W
+            == PTEFlags::V | PTEFlags::R | PTEFlags::W,
+        "data permission error"
     );
 
     assert!(
@@ -50,7 +52,8 @@ pub fn remap_test() {
             .find_pte(mid_bss_vp)
             .expect("failed to find .bss pte")
             .get_flags()
-            == PTEFlags::R | PTEFlags::W
+            == PTEFlags::V | PTEFlags::R | PTEFlags::W,
+        "bss permission error"
     );
 
     info!("remap_test passed!");
