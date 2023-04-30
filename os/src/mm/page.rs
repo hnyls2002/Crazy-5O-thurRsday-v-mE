@@ -48,12 +48,12 @@ impl Frame {
         self.0.get_bits(PPN_RANGE)
     }
 
-    pub fn get_pte_array_mut(&self) -> &mut [PTE] {
+    pub fn get_pte_array_mut(&self) -> &'static mut [PTE] {
         let pa = self.0;
         unsafe { slice::from_raw_parts_mut(pa as *mut PTE, PTE_NUM) }
     }
 
-    pub fn get_bytes_array_mut(&self) -> &mut [u8] {
+    pub fn get_bytes_array_mut(&self) -> &'static mut [u8] {
         let pa = self.0;
         unsafe { slice::from_raw_parts_mut(pa as *mut u8, PAGE_SIZE) }
     }
