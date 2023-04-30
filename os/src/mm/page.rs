@@ -40,8 +40,8 @@ impl Page {
 }
 
 impl Frame {
-    pub fn lower_page(&self) -> Self {
-        Self(self.0 - PAGE_SIZE)
+    pub fn next_page(&self) -> Self {
+        Self(self.0 + PAGE_SIZE)
     }
 
     pub fn get_ppn(&self) -> usize {

@@ -14,22 +14,22 @@ pub trait FrameAllocator {
 }
 
 pub struct StackFrameAllocator {
-    top: Frame,
-    bottom: Frame,
+    start: Frame,
+    end: Frame,
     recycled: Vec<Frame>,
 }
 
 impl StackFrameAllocator {
     pub fn new_empty() -> Self {
         StackFrameAllocator {
-            top: Frame(0),
-            bottom: Frame(0),
+            start: Frame(0),
+            end: Frame(0),
             recycled: Vec::new(),
         }
     }
-    pub fn init(&mut self, top: Frame, bottom: Frame) {
-        self.top = top;
-        self.bottom = bottom;
+    pub fn init(&mut self, start: Frame, end: Frame) {
+        self.start = start;
+        self.end = end;
     }
 }
 
@@ -38,16 +38,16 @@ impl FrameAllocator for StackFrameAllocator {
         if !self.recycled.is_empty() {
             return Ok(self.recycled.pop().unwrap());
         }
-        if self.top > self.bottom {
-            let ret = self.top;
-            self.top = self.top.lower_page();
+        if self.start < self.end {
+            let ret = self.start;
+            self.start = self.start.next_page();
             return Ok(ret);
         }
         Err(())
     }
 
     fn dealloc(&mut self, pp: Frame) -> Result<(), ()> {
-        if pp <= self.top || self.recycled.contains(&pp) {
+        if pp >= self.start || self.recycled.contains(&pp) {
             return Err(());
         }
         self.recycled.push(pp);
