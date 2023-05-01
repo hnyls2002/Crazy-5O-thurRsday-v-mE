@@ -14,7 +14,7 @@ mod mm;
 extern crate alloc;
 use core::arch::{asm, global_asm};
 use mm::{activate_kernel_space, frame_allocator_init, heap_init, heap_test, mm_test};
-use riscv::register::{mepc, mideleg, mstatus, satp};
+use riscv::register::{mepc, mstatus, satp};
 
 use crate::kfc_sbi::sbi_shutdown;
 
@@ -22,7 +22,8 @@ global_asm!(include_str!("entry.S"));
 
 // global/static variables are located in .bss section
 // so .bss should be cleared
-fn clear_bss() {
+#[no_mangle]
+pub fn clear_bss() {
     extern "C" {
         fn sbss();
         fn ebss();
@@ -38,16 +39,22 @@ pub fn machine_start() -> ! {
     clear_bss();
     unsafe {
         // set previous mode m-mode
-        mstatus::set_mpp(mstatus::MPP::Machine);
+        mstatus::set_mpp(mstatus::MPP::Supervisor);
         // jump address to kernel_main
         mepc::write(kernel_main as usize);
         // disable page
         satp::write(0);
         // delegate all interrupt and exception
-        mideleg::set_sext();
-        mideleg::set_ssoft();
-        mideleg::set_stimer();
+        asm!("csrw mideleg, {}", in(reg) 0xffff);
+        asm!("csrw medeleg, {}", in(reg) 0xffff);
+        // set sie to enable all interrupt
+        asm!("csrw sie, {}", in(reg) 0x222);
+
+        asm!("csrw pmpaddr0, {}", in(reg) 0x3fffffffffffff as usize);
+        asm!("csrw pmpcfg0, {}", in(reg) 0xf);
+
         // TODO : some other boot settings...
+
         asm!("mret");
     }
     panic!("os does not enter s-mode!");
@@ -72,4 +79,23 @@ pub fn kernel_init() {
 
     mm_test::remap_test();
     activate_kernel_space();
+
+    // unsafe {
+    //     let addr = 0x8090_0000 as *mut usize;
+    //     let mut _a = kernel_init as usize;
+    //     // stvec::write(_a, riscv::register::utvec::TrapMode::Direct);
+    //     // asm!("csrw stvec, {}", in(reg) _a);
+    //     stvec::write(_a, mtvec::TrapMode::Direct);
+    //     asm!("csrw stvec, {}", in(reg) _a);
+    //     warn!("_a : {:#X?}", _a);
+    //     warn!("stvec: {:X?}", stvec::read().address());
+    //     warn!("kernel_init: {:#X?}", _a);
+    //     warn!("stvec: {:#X?}", stvec::read());
+    //     error!("mtvec: {:#X?}", mtvec::read());
+    //     mstatus::set_mie();
+    //     debug!("write addr: {:p}", addr);
+    //     addr.write_volatile("Hello, world!\0".as_ptr() as usize);
+    //     let s: *const char = addr.read_volatile() as *const u8 as *const char;
+    //     debug!("the first letter of the string : {:?}", *s);
+    // };
 }
