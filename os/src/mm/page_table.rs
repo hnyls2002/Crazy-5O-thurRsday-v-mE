@@ -92,7 +92,7 @@ impl PageTable {
         }
     }
 
-    pub fn find_create_pte_mut(&mut self, vp: Page) -> Option<&mut PTE> {
+    pub fn find_create_pte_mut(&mut self, vp: Page) -> Option<&'static mut PTE> {
         let mut cur_frame = self.entry.clone();
         let indices = vp.get_indices();
 
@@ -115,7 +115,7 @@ impl PageTable {
         Some(last_pte)
     }
 
-    pub fn find_pte_mut(&self, vp: Page) -> Option<&mut PTE> {
+    pub fn find_pte_mut(&self, vp: Page) -> Option<&'static mut PTE> {
         let mut cur_frame = self.entry.clone();
         let indices = vp.get_indices();
         for i in 0..2 {
@@ -150,7 +150,7 @@ impl PageTable {
         }
     }
 
-    pub fn find_pte(&self, vp: Page) -> Option<&PTE> {
+    pub fn find_pte(&self, vp: Page) -> Option<&'static PTE> {
         self.find_pte_mut(vp).map_or(None, |pte| Some(pte))
     }
 }
