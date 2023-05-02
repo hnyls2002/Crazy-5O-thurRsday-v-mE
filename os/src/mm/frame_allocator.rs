@@ -2,7 +2,7 @@ use alloc::vec::Vec;
 use lazy_static::lazy_static;
 
 use crate::{
-    config::{MEMORY_END, PAGE_SIZE},
+    config::{MEMORY_END, PAGE_BYTES},
     kfc_util::up_safe_cell::UPSafeCell,
 };
 
@@ -75,7 +75,7 @@ pub fn frame_alloc() -> Option<FrameTracker> {
     assert!(res.is_ok(), "Frame allocation failed!");
     let res_frame = res.ok().unwrap();
     let bytes_array_mut = res_frame.get_bytes_array_mut();
-    for i in 0..PAGE_SIZE {
+    for i in 0..PAGE_BYTES {
         bytes_array_mut[i] = 0;
     }
     Some(FrameTracker(res_frame))

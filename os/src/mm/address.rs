@@ -1,4 +1,4 @@
-use crate::config::PAGE_SIZE;
+use crate::config::PAGE_BYTES;
 
 use super::{Frame, Page};
 
@@ -18,18 +18,18 @@ pub fn align_up(addr: usize, align: usize) -> usize {
 
 impl VirtAddr {
     pub fn floor_page(&self) -> Page {
-        Page(align_down(self.0, PAGE_SIZE))
+        Page(align_down(self.0, PAGE_BYTES))
     }
     pub fn ceil_page(&self) -> Page {
-        Page(align_up(self.0, PAGE_SIZE))
+        Page(align_up(self.0, PAGE_BYTES))
     }
 }
 
 impl PhysAddr {
     pub fn floor_frame(&self) -> Frame {
-        Frame(align_down(self.0, PAGE_SIZE))
+        Frame(align_down(self.0, PAGE_BYTES))
     }
     pub fn ceil_frame(&self) -> Frame {
-        Frame(align_up(self.0, PAGE_SIZE))
+        Frame(align_up(self.0, PAGE_BYTES))
     }
 }

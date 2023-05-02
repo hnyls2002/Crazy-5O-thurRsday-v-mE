@@ -2,7 +2,9 @@ use core::slice;
 
 use riscv::addr::BitField;
 
-use crate::config::{PAGE_SIZE, PPN_RANGE, PTE_NUM, SV39_INDEX_BITS, SV39_INDEX_START};
+use crate::config::{
+    PP_PPN_RANGE, PAGE_BYTES, PAGE_BYTES_BITS, VP_INDEX_BITS, VP_INDEX_NUM,
+};
 
 use super::{VirtAddr, PTE};
 
@@ -26,8 +28,8 @@ impl Into<Page> for Frame {
 
 impl Page {
     pub fn get_indices(&self) -> [usize; 3] {
-        let s = SV39_INDEX_START;
-        let t = SV39_INDEX_BITS;
+        let s = PAGE_BYTES_BITS;
+        let t = VP_INDEX_BITS;
         [
             self.0.get_bits(s + 2 * t..s + 3 * t),
             self.0.get_bits(s + t..s + 2 * t),
@@ -35,27 +37,27 @@ impl Page {
         ]
     }
     pub fn next_page(&self) -> Self {
-        Self(self.0 + PAGE_SIZE)
+        Self(self.0 + PAGE_BYTES)
     }
 }
 
 impl Frame {
     pub fn next_page(&self) -> Self {
-        Self(self.0 + PAGE_SIZE)
+        Self(self.0 + PAGE_BYTES)
     }
 
     pub fn get_ppn(&self) -> usize {
-        self.0.get_bits(PPN_RANGE)
+        self.0.get_bits(PP_PPN_RANGE)
     }
 
     pub fn get_pte_array_mut(&self) -> &'static mut [PTE] {
         let pa = self.0;
-        unsafe { slice::from_raw_parts_mut(pa as *mut PTE, PTE_NUM) }
+        unsafe { slice::from_raw_parts_mut(pa as *mut PTE, VP_INDEX_NUM) }
     }
 
     pub fn get_bytes_array_mut(&self) -> &'static mut [u8] {
         let pa = self.0;
-        unsafe { slice::from_raw_parts_mut(pa as *mut u8, PAGE_SIZE) }
+        unsafe { slice::from_raw_parts_mut(pa as *mut u8, PAGE_BYTES) }
     }
 }
 

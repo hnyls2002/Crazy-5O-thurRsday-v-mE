@@ -155,13 +155,10 @@ pub fn activate_kernel_space() {
         .exclusive_access()
         .get_pt_root_frame()
         .get_ppn();
+
     unsafe {
-        asm!("sfence.vma");
-        debug!("ppn is {:#X?}", ppn);
         satp::write((8usize << 60) | ppn);
-        warn!("ppn is {:#X?}", ppn);
         // satp::set(satp::Mode::Sv39, 0, ppn);
         asm!("sfence.vma");
     };
-    debug!("kernel space activated");
 }

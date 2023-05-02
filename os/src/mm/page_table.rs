@@ -2,7 +2,7 @@ use alloc::vec::Vec;
 use bitflags::bitflags;
 use riscv::addr::BitField;
 
-use crate::config::{PAGE_SIZE_BITS, PPN_RANGE, PTE_FLAGS_MASK};
+use crate::config::{PAGE_BYTES_BITS, PTE_FLAGS_MASK, PTE_PPN_RANGE};
 
 use super::{frame_alloc, Frame, FrameTracker, Page};
 
@@ -24,12 +24,12 @@ pub struct PTE(usize);
 
 impl PTE {
     pub fn map_frame(&mut self, phys_page: Frame, flags: PTEFlags) {
-        self.0.set_bits(PPN_RANGE, phys_page.get_ppn());
+        self.0.set_bits(PTE_PPN_RANGE, phys_page.get_ppn());
         self.set_flags(flags);
     }
 
     pub fn get_frame(&self) -> Frame {
-        Frame(self.0.get_bits(PPN_RANGE) << PAGE_SIZE_BITS)
+        Frame(self.0.get_bits(PTE_PPN_RANGE) << PAGE_BYTES_BITS)
     }
 
     pub fn get_flags(&self) -> PTEFlags {
