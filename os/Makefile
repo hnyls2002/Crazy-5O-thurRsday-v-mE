@@ -18,6 +18,10 @@ BOOTLOADER := none
 # KERNEL ENTRY
 KERNEL_ENTRY_PA := 0x80000000
 
+#Disassembly
+DISASM ?= -d -S
+DISASM_TMP := target/$(TARGET)/$(MODE)/asm
+
 clean:
 	@cargo clean
 
@@ -29,6 +33,12 @@ $(KERNEL_BIN): kernel
 kernel:
 	@cargo build $(MODE_ARG) --features $(LOG)
 	@file $(KERNEL_ELF)
+
+disasm: kernel
+	@$(OBJDUMP) $(DISASM) $(KERNEL_ELF) > $(DISASM_TMP)
+	@vim $(DISASM_TMP)
+	@rm $(DISASM_TMP)
+
 
 run: build
 	@qemu-system-riscv64 \
