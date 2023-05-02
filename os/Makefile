@@ -1,27 +1,46 @@
+# Logger level: Trace, Debug, Info, Warn, Error
 LOG ?= Trace
 
-build:
-	@cargo build --release --features $(LOG)
-	@file target/riscv64gc-unknown-none-elf/release/os
-	@rust-objcopy --strip-all target/riscv64gc-unknown-none-elf/release/os -O binary target/riscv64gc-unknown-none-elf/release/os.bin
+# Utils
+OBJDUMP := rust-objdump --arch-name=riscv64
+OBJCOPY := rust-objcopy --binary-architecture=riscv64
+
+# Building
+TARGET := riscv64gc-unknown-none-elf
+MODE := release
+KERNEL_ELF := target/$(TARGET)/$(MODE)/os
+KERNEL_BIN := $(KERNEL_ELF).bin
+MODE_ARG := --$(MODE)
+
+# Bootloader
+BOOTLOADER := none
+
+# KERNEL ENTRY
+KERNEL_ENTRY_PA := 0x80000000
+
+clean:
+	@cargo clean
+
+build: $(KERNEL_BIN)
+
+$(KERNEL_BIN): kernel
+	@$(OBJCOPY) --strip-all $(KERNEL_ELF) -O binary $(KERNEL_BIN)
+
+kernel:
+	@cargo build $(MODE_ARG) --features $(LOG)
+	@file $(KERNEL_ELF)
 
 run: build
 	@qemu-system-riscv64 \
 		-machine virt \
 		-nographic \
-		-bios none \
-		-device loader,file=target/riscv64gc-unknown-none-elf/release/os.bin,addr=0x80000000
+		-bios $(BOOTLOADER) \
+		-device loader,file=$(KERNEL_BIN),addr=$(KERNEL_ENTRY_PA)
 
-run_with_gdb: build
-	@qemu-system-riscv64 \
-		-machine virt \
-		-nographic \
-		-bios none \
-		-device loader,file=target/riscv64gc-unknown-none-elf/release/os.bin,addr=0x80000000 \
-		-s -S
+gdbserver: build
+	@qemu-system-riscv64 -machine virt -nographic -bios $(BOOTLOADER) -device loader,file=$(KERNEL_BIN),addr=$(KERNEL_ENTRY_PA) -s -S
 
-gdb: 
-	riscv64-unknown-elf-gdb \
-    	-ex 'file target/riscv64gc-unknown-none-elf/release/os' \
-    	-ex 'set arch riscv:rv64' \
-    	-ex 'target remote localhost:1234'
+gdbclient:
+	@riscv64-unknown-elf-gdb -ex 'file $(KERNEL_ELF)' -ex 'set arch riscv:rv64' -ex 'target remote localhost:1234'
+
+.PHONY: build run gdbserver gdbclient
