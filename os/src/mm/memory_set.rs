@@ -4,7 +4,9 @@ use alloc::vec::Vec;
 use lazy_static::lazy_static;
 use riscv::register::satp;
 
-use crate::{config::MEMORY_END, info, kfc_util::up_safe_cell::UPSafeCell};
+use crate::{
+    config::MEMORY_END, debug, info, kfc_sbi::mmio::MMIO, kfc_util::up_safe_cell::UPSafeCell, warn,
+};
 
 use super::{Frame, MapArea, MapPerm, MapType, PTEFlags, PageTable, VPRange, VirtAddr};
 
@@ -138,6 +140,12 @@ impl MemorySet {
         );
         // trace!("insert pool into kernel space");
         memory_set.insert_new_map_area(pool);
+
+        // MMIO
+        for vp_range in MMIO {
+            let ma = MapArea::new_bare(vp_range, MapType::Identical, MapPerm::R | MapPerm::W);
+            memory_set.insert_new_map_area(ma);
+        }
         memory_set
     }
 }
@@ -148,7 +156,12 @@ pub fn activate_kernel_space() {
         .get_pt_root_frame()
         .get_ppn();
     unsafe {
-        satp::set(satp::Mode::Sv39, 0, ppn);
+        asm!("sfence.vma");
+        debug!("ppn is {:#X?}", ppn);
+        satp::write((8usize << 60) | ppn);
+        warn!("ppn is {:#X?}", ppn);
+        // satp::set(satp::Mode::Sv39, 0, ppn);
         asm!("sfence.vma");
     };
+    debug!("kernel space activated");
 }

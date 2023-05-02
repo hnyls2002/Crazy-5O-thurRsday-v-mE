@@ -3,6 +3,7 @@ use core::arch::asm;
 
 use crate::{error, info};
 
+pub mod mmio;
 pub mod uart;
 
 pub const LOGO: &str = r" __  ___  _______   ______      _______..______    __  

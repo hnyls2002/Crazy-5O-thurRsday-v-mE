@@ -40,16 +40,21 @@ pub fn machine_start() -> ! {
     unsafe {
         // set previous mode m-mode
         mstatus::set_mpp(mstatus::MPP::Supervisor);
+
         // jump address to kernel_main
         mepc::write(kernel_main as usize);
+
         // disable page
         satp::write(0);
+
         // delegate all interrupt and exception
         asm!("csrw mideleg, {}", in(reg) 0xffff);
         asm!("csrw medeleg, {}", in(reg) 0xffff);
+
         // set sie to enable all interrupt
         asm!("csrw sie, {}", in(reg) 0x222);
 
+        // physical memory protection
         asm!("csrw pmpaddr0, {}", in(reg) 0x3fffffffffffff as usize);
         asm!("csrw pmpcfg0, {}", in(reg) 0xf);
 
