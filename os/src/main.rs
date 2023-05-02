@@ -10,19 +10,24 @@ mod kfc_sbi;
 mod kfc_util;
 mod lang_items;
 mod mm;
+mod trap;
 
 extern crate alloc;
 use core::arch::{asm, global_asm};
 use mm::{activate_kernel_space, frame_allocator_init, heap_init, heap_test, mm_test};
-use riscv::register::{mepc, mstatus, satp};
+use riscv::register::{mepc, mstatus, mtvec, satp, stvec, utvec::TrapMode};
 
-use crate::kfc_sbi::sbi_shutdown;
+use crate::{
+    kfc_sbi::sbi_shutdown,
+    trap::{m_mode_trap_handler, s_mode_trap_handler},
+};
 
 global_asm!(include_str!("entry.S"));
 
 // global/static variables are located in .bss section
 // so .bss should be cleared
 #[no_mangle]
+#[inline(never)]
 pub fn clear_bss() {
     extern "C" {
         fn sbss();
@@ -48,11 +53,15 @@ pub fn machine_start() -> ! {
         satp::write(0);
 
         // delegate all interrupt and exception
-        asm!("csrw mideleg, {}", in(reg) 0xffff);
-        asm!("csrw medeleg, {}", in(reg) 0xffff);
+        asm!("csrw mideleg, {}", in(reg) !0);
+        asm!("csrw medeleg, {}", in(reg) !0);
+        asm!("csrw mcounteren, {}", in(reg) !0);
 
         // set sie to enable all interrupt
         asm!("csrw sie, {}", in(reg) 0x222);
+
+        // TODO : for temporary test
+        mtvec::write(m_mode_trap_handler as usize, TrapMode::Direct);
 
         // physical memory protection
         asm!("csrw pmpaddr0, {}", in(reg) 0x3fffffffffffff as usize);
@@ -67,6 +76,9 @@ pub fn machine_start() -> ! {
 
 #[no_mangle]
 pub fn kernel_main() -> ! {
+    // TODO : temporary set S-mode trap handler
+    unsafe { stvec::write(s_mode_trap_handler as usize, TrapMode::Direct) };
+
     info!("Entering into kernel_main function!");
     info!("UART print test passed!");
     println!("\x1b[34m{}\x1b[0m", kfc_sbi::LOGO);
@@ -85,22 +97,13 @@ pub fn kernel_init() {
     mm_test::remap_test();
     activate_kernel_space();
 
-    // unsafe {
-    //     let addr = 0x8090_0000 as *mut usize;
-    //     let mut _a = kernel_init as usize;
-    //     // stvec::write(_a, riscv::register::utvec::TrapMode::Direct);
-    //     // asm!("csrw stvec, {}", in(reg) _a);
-    //     stvec::write(_a, mtvec::TrapMode::Direct);
-    //     asm!("csrw stvec, {}", in(reg) _a);
-    //     warn!("_a : {:#X?}", _a);
-    //     warn!("stvec: {:X?}", stvec::read().address());
-    //     warn!("kernel_init: {:#X?}", _a);
-    //     warn!("stvec: {:#X?}", stvec::read());
-    //     error!("mtvec: {:#X?}", mtvec::read());
-    //     mstatus::set_mie();
-    //     debug!("write addr: {:p}", addr);
-    //     addr.write_volatile("Hello, world!\0".as_ptr() as usize);
-    //     let s: *const char = addr.read_volatile() as *const u8 as *const char;
-    //     debug!("the first letter of the string : {:?}", *s);
-    // };
+    // exception test code...
+    unsafe {
+        // illegal instruction
+        error!("mtvec: {:#X?}", mtvec::read());
+
+        // page fault
+        let addr = 0x8090_0000 as *mut usize;
+        addr.write_volatile("Hello, world!\0".as_ptr() as usize);
+    };
 }
