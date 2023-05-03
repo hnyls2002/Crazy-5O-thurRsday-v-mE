@@ -23,6 +23,9 @@ impl VirtAddr {
     pub fn ceil_page(&self) -> Page {
         Page(align_up(self.0, PAGE_BYTES))
     }
+    pub fn offset(&self) -> usize {
+        self.0 & (PAGE_BYTES - 1)
+    }
 }
 
 impl PhysAddr {
@@ -32,4 +35,9 @@ impl PhysAddr {
     pub fn ceil_frame(&self) -> Frame {
         Frame(align_up(self.0, PAGE_BYTES))
     }
+}
+
+pub struct VARange {
+    pub start: VirtAddr,
+    pub end: VirtAddr,
 }

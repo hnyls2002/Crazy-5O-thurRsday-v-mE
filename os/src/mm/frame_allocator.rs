@@ -75,6 +75,7 @@ pub fn frame_alloc() -> Option<FrameTracker> {
     assert!(res.is_ok(), "Frame allocation failed!");
     let res_frame = res.ok().unwrap();
     let bytes_array_mut = res_frame.get_bytes_array_mut();
+    // always clear the bytes array
     for i in 0..PAGE_BYTES {
         bytes_array_mut[i] = 0;
     }

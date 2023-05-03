@@ -129,6 +129,10 @@ impl PageTable {
         Some(last_pte)
     }
 
+    pub fn find_pte(&self, vp: Page) -> Option<&'static PTE> {
+        self.find_pte_mut(vp).map_or(None, |pte| Some(pte))
+    }
+
     pub fn map_one(&mut self, vp: Page, pp: Frame, flags: PTEFlags) -> Result<(), ()> {
         // debug!("map_one: {:x?} {:x?} {:x?}", vp, pp, flags);
         let pte = self.find_create_pte_mut(vp).unwrap();
@@ -150,7 +154,13 @@ impl PageTable {
         }
     }
 
-    pub fn find_pte(&self, vp: Page) -> Option<&'static PTE> {
-        self.find_pte_mut(vp).map_or(None, |pte| Some(pte))
+    pub fn translate_vp(&self, vp: Page) -> Option<Frame> {
+        self.find_pte(vp).map_or(None, |pte| {
+            if pte.is_valid() {
+                Some(pte.get_frame())
+            } else {
+                None
+            }
+        })
     }
 }

@@ -1,11 +1,15 @@
-use core::arch::asm;
+use core::{arch::asm, cmp::max};
 
 use alloc::vec::Vec;
 use lazy_static::lazy_static;
 use riscv::register::satp;
 
 use crate::{
-    config::MEMORY_END, debug, info, kfc_sbi::mmio::MMIO, kfc_util::up_safe_cell::UPSafeCell, warn,
+    config::{MEMORY_END, USER_STACK_SIZE},
+    info,
+    kfc_sbi::mmio::MMIO,
+    kfc_util::up_safe_cell::UPSafeCell,
+    mm::VARange,
 };
 
 use super::{Frame, MapArea, MapPerm, MapType, PTEFlags, PageTable, VPRange, VirtAddr};
@@ -161,4 +165,83 @@ pub fn activate_kernel_space() {
         // satp::set(satp::Mode::Sv39, 0, ppn);
         asm!("sfence.vma");
     };
+}
+
+impl MemorySet {
+    pub fn new_from_elf(elf_data: &[u8]) -> Self {
+        let mut memory_set = MemorySet::new();
+        // TODO : map trampoline
+
+        // parse elf file by xmas_elf
+        let elf = xmas_elf::ElfFile::new(elf_data).expect("failed to parse elf");
+
+        // get elf header
+        let elf_headr = elf.header;
+
+        // check if the magic is "0x7F E L F"
+        let magic = elf_headr.pt1.magic;
+        assert_eq!(
+            magic,
+            [0x7F, 'E' as u8, 'L' as u8, 'F' as u8],
+            "elf magic error"
+        );
+
+        // get program header table
+        let ph_count = elf.header.pt2.ph_count();
+        let mut max_end_va = VirtAddr(0);
+
+        // map all loadable segments
+        for i in 0..ph_count {
+            let ph = elf.program_header(i).expect("failed to get program header");
+            // If this header is a loadable segment, map it into memory.
+            if ph.get_type().unwrap() == xmas_elf::program::Type::Load {
+                let start_va = VirtAddr(ph.virtual_addr() as usize);
+                let end_va = VirtAddr(ph.virtual_addr() as usize + ph.mem_size() as usize);
+                max_end_va = max(max_end_va, end_va);
+
+                // map it with U permission and R/W/X according to the flags
+                let mut map_perm = MapPerm::U;
+                let ph_flag = ph.flags();
+                if ph_flag.is_read() {
+                    map_perm |= MapPerm::R;
+                }
+                if ph_flag.is_write() {
+                    map_perm |= MapPerm::W;
+                }
+                if ph_flag.is_execute() {
+                    map_perm |= MapPerm::X;
+                }
+
+                // build a map_area and bound frames
+                let mut map_area =
+                    MapArea::new_bare(VPRange::new(start_va, end_va), MapType::Framed, map_perm);
+                map_area.bound_frames();
+                // TODO : this could be wrong...
+                map_area.fill_with_data(
+                    VARange {
+                        start: start_va,
+                        end: VirtAddr(start_va.0 + ph.file_size() as usize),
+                    },
+                    &elf.input[ph.offset() as usize..(ph.offset() + ph.file_size()) as usize],
+                );
+
+                // insert the map_area into memory_set
+                memory_set.insert_new_map_area(map_area);
+            }
+        }
+
+        // build the user stack : next_page() actually build a guard page...
+        let user_stack_bottom = max_end_va.ceil_page().next_page().start_address();
+        let user_stack_top = VirtAddr(user_stack_bottom.0 + USER_STACK_SIZE);
+        let mut user_stack = MapArea::new_bare(
+            VPRange::new(user_stack_bottom, user_stack_top),
+            MapType::Framed,
+            MapPerm::U | MapPerm::R | MapPerm::W,
+        );
+        user_stack.bound_frames();
+        memory_set.insert_new_map_area(user_stack);
+
+        // TODO : trap context
+        todo!()
+    }
 }

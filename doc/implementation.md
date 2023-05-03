@@ -70,6 +70,7 @@ Then virtual memory on...
  - User's user stack
  - User's `TrapContext`
  - User's `Trampoline`
+ - ~~User does not have heap at the moment...~~
 - [ ] For each section in `elf` file, map the virtual address to physical address (also create new frames and **copy data** into it)
 
 **TaskContext**

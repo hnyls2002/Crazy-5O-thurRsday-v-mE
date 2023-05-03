@@ -7,7 +7,7 @@ pub mod mm_test;
 pub mod page;
 pub mod page_table;
 
-pub use address::{PhysAddr, VirtAddr};
+pub use address::{PhysAddr, VARange, VirtAddr};
 pub use frame_allocator::{frame_alloc, frame_allocator_init, frame_dealloc, FrameTracker};
 pub use heap_allocator::{heap_init, heap_test::heap_test};
 pub use map_area::{MapArea, MapPerm, MapType};

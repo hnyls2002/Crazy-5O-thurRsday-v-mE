@@ -21,3 +21,6 @@ pub const PTE_PPN_RANGE: Range<usize> = 10..54;
 
 // SV39 : PP
 pub const PP_PPN_RANGE: Range<usize> = 12..56;
+
+// User Stack
+pub const USER_STACK_SIZE: usize = 0x2000; // 8KB

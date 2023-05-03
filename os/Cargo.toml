@@ -9,6 +9,7 @@ edition = "2021"
 riscv = { git = "https://github.com/rcore-os/riscv", features = ["inline-asm"] }
 bitflags = "1.2.1"
 lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
+xmas-elf = "0.7.0"
 
 [features] 
 NoneLog = []

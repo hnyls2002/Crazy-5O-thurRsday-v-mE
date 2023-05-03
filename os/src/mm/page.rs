@@ -2,9 +2,7 @@ use core::slice;
 
 use riscv::addr::BitField;
 
-use crate::config::{
-    PP_PPN_RANGE, PAGE_BYTES, PAGE_BYTES_BITS, VP_INDEX_BITS, VP_INDEX_NUM,
-};
+use crate::config::{PAGE_BYTES, PAGE_BYTES_BITS, PP_PPN_RANGE, VP_INDEX_BITS, VP_INDEX_NUM};
 
 use super::{VirtAddr, PTE};
 
@@ -38,6 +36,11 @@ impl Page {
     }
     pub fn next_page(&self) -> Self {
         Self(self.0 + PAGE_BYTES)
+    }
+
+    /// start address of this page
+    pub fn start_address(&self) -> VirtAddr {
+        VirtAddr(self.0)
     }
 }
 

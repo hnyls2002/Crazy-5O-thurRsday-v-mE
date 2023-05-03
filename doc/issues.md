@@ -53,3 +53,7 @@ pub struct Test2 {
 
 Why we can't directly use the symbols but store the symbols into `.quad` section ? 
 - Ans: as the kernel img strips all symbols and headrs, so symbols can only be recognized at compile time. However, we don't know the number of apps at compile time...
+
+#### `ELF` section's memory size vs file size
+- Memory size can be larger than file size
+- Some space in memory would not appear in the file, such as `.bss` section.

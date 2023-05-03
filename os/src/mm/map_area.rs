@@ -3,7 +3,7 @@ use core::fmt::Debug;
 use alloc::collections::BTreeMap;
 use bitflags::bitflags;
 
-use super::{frame_alloc, Frame, FrameTracker, Page, VPRange};
+use super::{frame_alloc, Frame, FrameTracker, Page, VARange, VPRange};
 
 bitflags! {
     pub struct MapPerm : usize{
@@ -67,8 +67,13 @@ impl MapArea {
     }
     /// #### bound each page to a physical frame
     /// then this map_area can manage the physical frames
+    /// frames being allocated in this function
     pub fn bound_frames(&mut self) {
         assert!(self.mem_frames.is_empty(), "mem_frames is not empty");
+        assert!(
+            self.map_type == MapType::Framed,
+            "map_type is not Framed, no need to bound_frames"
+        );
         for it in self.vp_range.iter() {
             let page = it.value();
             let frame = frame_alloc().unwrap();
@@ -76,11 +81,38 @@ impl MapArea {
         }
     }
 
+    /// ### get the physical frame of a virtual page
+    /// 1. if map_type is identical, then vp == pp
+    /// 2. if map_type is framed, then vp is the key of `mem_frames` : we assume that this pp has been allocated before
     pub fn get_framed(&self, vp: Page) -> Frame {
         match self.map_type {
             MapType::Identical => vp.into(),
             MapType::Framed => self.mem_frames.get(&vp).expect("frame not found").0,
             MapType::Linear => vp.into(), // TODO : linear mapping
+        }
+    }
+
+    /// assume that start and end are not aligned
+    /// data's va_range can be smaller than map_area's va_range
+    pub fn fill_with_data(&mut self, va_range: VARange, data: &[u8]) {
+        assert!(
+            self.map_type == MapType::Framed,
+            "map_type is not Framed when filling data"
+        );
+        assert!(!self.mem_frames.is_empty(), "mem_frames is empty");
+
+        let mut cur_va = va_range.start;
+        let mut cur_offset = 0 as usize;
+        while cur_va < va_range.end {
+            let cur_va_end = cur_va.ceil_page().start_address();
+            let cur_offset_end = cur_offset + (cur_va_end.0 - cur_va.0);
+            let src = &data[cur_offset..cur_offset_end];
+            let dst = &mut self.get_framed(cur_va.floor_page()).get_bytes_array_mut()
+                [cur_va.offset()..cur_va_end.offset()];
+            dst.copy_from_slice(src);
+
+            cur_va = cur_va_end;
+            cur_offset = cur_offset_end;
         }
     }
 }
