@@ -1,12 +1,14 @@
 #![no_main]
 #![no_std]
 #![feature(panic_info_message)]
+#![feature(alloc_error_handler)]
 
 #[macro_use]
 mod console;
 #[macro_use]
 mod kfc_logger;
 
+mod app_loader;
 mod config;
 mod kfc_sbi;
 mod kfc_util;
@@ -22,11 +24,13 @@ use mm::{activate_kernel_space, frame_allocator_init, heap_init, heap_test, mm_t
 use riscv::register::{mepc, mstatus, mtvec, satp, stvec, utvec::TrapMode};
 
 use crate::{
+    app_loader::loader_debug,
     kfc_sbi::sbi_shutdown,
     trap::{m_mode_trap_handler, s_mode_trap_handler},
 };
 
 global_asm!(include_str!("entry.S"));
+global_asm!(include_str!("link_app.S"));
 
 // global/static variables are located in .bss section
 // so .bss should be cleared
@@ -87,6 +91,9 @@ pub fn kernel_main() -> ! {
     info!("UART print test passed!");
     println!("\x1b[34m{}\x1b[0m", kfc_sbi::LOGO);
     kernel_init();
+
+    loader_debug();
+
     sbi_shutdown(0);
 }
 
@@ -102,12 +109,12 @@ pub fn kernel_init() {
     activate_kernel_space();
 
     // exception test code...
-    unsafe {
-        // illegal instruction
-        error!("mtvec: {:#X?}", mtvec::read());
+    // unsafe {
+    //     // illegal instruction
+    //     error!("mtvec: {:#X?}", mtvec::read());
 
-        // page fault
-        let addr = 0x8090_0000 as *mut usize;
-        addr.write_volatile("Hello, world!\0".as_ptr() as usize);
-    };
+    //     // page fault
+    //     let addr = 0x8090_0000 as *mut usize;
+    //     addr.write_volatile("Hello, world!\0".as_ptr() as usize);
+    // };
 }

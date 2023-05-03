@@ -58,13 +58,13 @@ Some structs and methods
 
 **Build the user's application**
 
-- [ ] For each application, build it into an `elf` file
-- [ ] Place the compiled `elf` file into kernel's memory (`.data` section). ~~As each app's base address are set when *app being compiled*, so just place them into kernel's memory will case the *offset error* problem.~~
-- [ ] ~~Move each app's `elf` file (`img` file) into the correct memory address.~~
+- [x] For each application, build it into an `elf` file
+- [x] Place the compiled `elf` file into kernel's memory (`.data` section). ~~As each app's base address are set when *app being compiled*, so just place them into kernel's memory will case the *offset error* problem.~~
+- [x] ~~Move each app's `elf` file (`img` file) into the correct memory address.~~
 
 Then virtual memory on...
 
-- [ ] A common `linker.ld` for all apps with base address set to `0x10000`.(align settings for R-W-X)
+- [x] A common `linker.ld` for all apps with base address set to `0x10000`.(align settings for R-W-X)
 - [ ] A `elf` app analyzer to initialize a new user space
  - User's kernel stack
  - User's user stack

@@ -31,6 +31,7 @@ $(KERNEL_BIN): kernel
 	@$(OBJCOPY) --strip-all $(KERNEL_ELF) -O binary $(KERNEL_BIN)
 
 kernel:
+	@cd ../user && make build
 	@cargo build $(MODE_ARG) --features $(LOG)
 	@file $(KERNEL_ELF)
 

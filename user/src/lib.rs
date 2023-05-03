@@ -24,7 +24,7 @@ fn main() -> i32 {
 }
 
 #[no_mangle]
-#[link_section = "text.entry"]
+#[link_section = ".text.entry"]
 pub extern "C" fn _start() -> ! {
     sys_exit(main());
     panic!("app should exit!");
