@@ -56,24 +56,61 @@ Some structs and methods
 
 #### Tasks(User) Related
 
-**Some implementation for user (application)**
+**Build the user's application**
 
-- [ ] A general `linker.ld` for all applications
-- [ ] load apps from `lib` into `.bss` section of the whole program at the start of kernel
-- [ ] A `from_elf` app analyzer to initialize a new user space
+- [ ] For each application, build it into an `elf` file
+- [ ] Place the compiled `elf` file into kernel's memory (`.data` section). ~~As each app's base address are set when *app being compiled*, so just place them into kernel's memory will case the *offset error* problem.~~
+- [ ] ~~Move each app's `elf` file (`img` file) into the correct memory address.~~
+
+Then virtual memory on...
+
+- [ ] A common `linker.ld` for all apps with base address set to `0x10000`.(align settings for R-W-X)
+- [ ] A `elf` app analyzer to initialize a new user space
  - User's kernel stack
  - User's user stack
  - User's `TrapContext`
  - User's `Trampoline`
+- [ ] For each section in `elf` file, map the virtual address to physical address (also create new frames and **copy data** into it)
 
+**TaskContext**
+Some context for switch back to an app's kernel stack.
+
+- [ ] fields including
+ - `sp` for kernel stack
+ - `ra` for `__ctx_restore`
+ - callee saved registers : cause `__switch` is a `naked` function
+- [ ] `switch` function
+
+
+**TrapContext**
+
+- [ ] Context fields : `sscratch` here is to store the `TrapContext` pointer.
+ - For trap into the right kernel space : `kernel_satp`, `kernel_sp`, `trap_handler`
+ - For back to user space : all registers (`sp` is `x2`), `sstatus`, `sepc`
+ - we can know user's `satp` in kernel space (memory_set in kernel space...)
+
+- [ ] `__cxt_save` : save context in user space
+- [ ] `__cxt_restore` : jump to user space at first then restore context
+- [ ] build the `trampline` page
+- [ ] `trap_handler` : dispatch traps
+ - jump to it from `__cxt_save`
+ - it jumps to `__cxt_restore` after handling the trap
+
+**syscall**
+
+- [ ] `yield`
+- [ ] `exit`
+- [ ] `write`
+
+**Taks manager, may become process in later chapter 5**
+
+- [ ] `TaskInfo` : a struct to record a task's information.
+- [ ] `TaskManager` and its methods.
 
 **Trap related topic is a little bit complicated compared to no-address-space case**
 
 A set of procedures for handling a system call
 
-- [ ] `__context_save`
-- [ ] `__context_restore`
-- [ ] `trap_handler`
 - [ ] `TrapContex` : save U-mode context
 - [ ] `TaskContex` : save S-mode context for switching
 - [ ] `__switch`
@@ -87,8 +124,3 @@ A set of procedures for handling a system call
 - [ ] interrupt happening when in S-mode
   - rCore just panic before chapter 9
   - xv6 write a `kerneltrap` function to handle it
-
-**Taks manager, may become process in later chapter 5**
-
-- [ ] `TaskControlBlock` : a struct to manage a task
-- [ ] `TaskManager` : a struct to manage all tasks
