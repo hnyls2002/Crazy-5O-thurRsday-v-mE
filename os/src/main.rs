@@ -12,6 +12,7 @@ mod kfc_sbi;
 mod kfc_util;
 mod lang_items;
 mod mm;
+mod syscall_impl;
 mod trap;
 
 extern crate alloc;
