@@ -4,8 +4,10 @@
 
 #[macro_use]
 mod console;
-mod config;
+#[macro_use]
 mod kfc_logger;
+
+mod config;
 mod kfc_sbi;
 mod kfc_util;
 mod lang_items;
@@ -13,6 +15,7 @@ mod mm;
 mod trap;
 
 extern crate alloc;
+
 use core::arch::{asm, global_asm};
 use mm::{activate_kernel_space, frame_allocator_init, heap_init, heap_test, mm_test};
 use riscv::register::{mepc, mstatus, mtvec, satp, stvec, utvec::TrapMode};
