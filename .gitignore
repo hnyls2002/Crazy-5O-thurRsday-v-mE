@@ -15,3 +15,5 @@ Cargo.lock
 
 tmp*
 tmp/
+
+link_app.S

@@ -1,4 +1,4 @@
-## Issues with RISC-V QEMU
+## Issues
 
 #### M-mode mret to S-mode
 - Set `mstatus.mpp` to `S-mode`, not `U-mode` or `M-mode`
@@ -43,3 +43,13 @@ pub struct Test2 {
 }
 ```
 - `repr(align(4096))` - Align the struct to 4096 bytes.
+
+#### User apps' build process
+1. `make build` generate all `.elf` and `.bin` files
+2. `os/build.rs` is a build script which automatically runs before the `cargo build` command. In this script, we generate the `link_app.S` to `.incbin` all the user apps' code.
+3. When running kernel, for each app, load the `elf` into memory (yes, it does copy into the newly acquired frames).
+
+`link_app.S` : we use `.quad` to store the address of each app's elf/bin file. 
+
+Why we can't directly use the symbols but store the symbols into `.quad` section ? 
+- Ans: I guess like that, when making the kernel `.bin` file, we striped all the symbols...
