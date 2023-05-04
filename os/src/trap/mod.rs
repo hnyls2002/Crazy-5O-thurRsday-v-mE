@@ -1,4 +1,23 @@
-use core::arch::asm;
+mod trap_context;
+
+use core::arch::{asm, global_asm};
+
+use lazy_static::lazy_static;
+
+use crate::mm::Frame;
+
+global_asm!(include_str!("trampoline.S"));
+
+fn get_trampoline_frame() -> Frame {
+    extern "C" {
+        fn strampoline();
+    }
+    Frame(strampoline as usize)
+}
+
+lazy_static! {
+    pub static ref TRAMPOLINE_FRAME: Frame = get_trampoline_frame();
+}
 
 pub fn s_mode_trap_handler() {
     unsafe {

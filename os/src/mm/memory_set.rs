@@ -5,7 +5,7 @@ use lazy_static::lazy_static;
 use riscv::register::satp;
 
 use crate::{
-    config::{MEMORY_END, USER_STACK_SIZE},
+    config::{MEMORY_END, TRAMPOLINE_VIRT_ADDR, TRAP_CTX_VIRT_ADDR, USER_STACK_SIZE},
     info,
     kfc_sbi::mmio::MMIO,
     kfc_util::up_safe_cell::UPSafeCell,
@@ -79,7 +79,6 @@ lazy_static! {
 
 impl MemorySet {
     pub fn new_kernel_space() -> Self {
-        // TODO : trampoline to be set...
         let mut memory_set = MemorySet::new();
 
         info!("-----------------------kernel space-----------------------");
@@ -100,7 +99,14 @@ impl MemorySet {
             "frame pool\t\t\t[{:#X?}, {:#X?})",
             ekernel as usize, MEMORY_END as usize
         );
+        info!(
+            "trampoline\t\t\t[{:#X?}, {:#X?})",
+            strampoline as usize,
+            strampoline as usize + 0x1000
+        );
         info!("-----------------------kernel space-----------------------");
+
+        memory_set.insert_new_map_area(MapArea::new_trampoline());
 
         // .text
         let text = MapArea::new(
@@ -175,7 +181,16 @@ pub fn activate_kernel_space() {
 impl MemorySet {
     pub fn new_from_elf(elf_data: &[u8]) -> Self {
         let mut memory_set = MemorySet::new();
-        // TODO : map trampoline
+
+        memory_set.insert_new_map_area(MapArea::new_trampoline());
+
+        let ctx_area = MapArea::new(
+            VPRange::new(TRAP_CTX_VIRT_ADDR, TRAMPOLINE_VIRT_ADDR),
+            MapType::Framed(BTreeMap::new()),
+            MapPerm::R | MapPerm::W,
+            None,
+        );
+        memory_set.insert_new_map_area(ctx_area);
 
         // parse elf file by xmas_elf
         let elf = xmas_elf::ElfFile::new(elf_data).expect("failed to parse elf");
@@ -247,7 +262,6 @@ impl MemorySet {
         );
         memory_set.insert_new_map_area(user_stack);
 
-        // TODO : trap context
-        todo!()
+        memory_set
     }
 }

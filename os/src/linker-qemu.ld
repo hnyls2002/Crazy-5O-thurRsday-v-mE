@@ -9,6 +9,13 @@ SECTIONS{
     stext = .;
     .text : {
         *(.text.entry)
+
+        # insert the trampoline page
+        . = ALIGN(4K);
+        strampoline = .;
+        *(.text.trampoline)
+        . = ALIGN(4K);
+
         *(.text .text.*)
     }
 

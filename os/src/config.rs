@@ -2,6 +2,8 @@
 #![allow(dead_code)]
 use core::ops::Range;
 
+use crate::mm::VirtAddr;
+
 pub const MEMORY_END: usize = 0x80800000; // 8 MB
 
 pub const KERNEL_HEAP_SIZE: usize = 0x30_0000; // 3MB
@@ -24,3 +26,8 @@ pub const PP_PPN_RANGE: Range<usize> = 12..56;
 
 // User Stack
 pub const USER_STACK_SIZE: usize = 0x2000; // 8KB
+
+// trap
+pub const VIRT_ADDR_MAX: VirtAddr = VirtAddr(usize::MAX);
+pub const TRAMPOLINE_VIRT_ADDR: VirtAddr = VirtAddr(VIRT_ADDR_MAX.0 - PAGE_BYTES);
+pub const TRAP_CTX_VIRT_ADDR: VirtAddr = VirtAddr(TRAMPOLINE_VIRT_ADDR.0 - PAGE_BYTES);

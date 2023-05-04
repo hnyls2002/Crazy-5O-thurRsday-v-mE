@@ -3,6 +3,11 @@ use core::fmt::Debug;
 use alloc::collections::BTreeMap;
 use bitflags::bitflags;
 
+use crate::{
+    config::{TRAMPOLINE_VIRT_ADDR, VIRT_ADDR_MAX},
+    trap::TRAMPOLINE_FRAME,
+};
+
 use super::{frame_alloc, Frame, FrameTracker, Page, VARange, VPRange, VirtAddr};
 
 bitflags! {
@@ -112,6 +117,15 @@ impl MapArea {
             ret.fill_with_data(data);
         }
         ret
+    }
+
+    pub fn new_trampoline() -> Self {
+        Self::new(
+            VPRange::new(TRAMPOLINE_VIRT_ADDR, VIRT_ADDR_MAX),
+            MapType::Target(*TRAMPOLINE_FRAME),
+            MapPerm::X | MapPerm::R,
+            None,
+        )
     }
 
     /// ### get the physical frame of a virtual page
