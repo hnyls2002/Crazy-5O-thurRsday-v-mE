@@ -41,7 +41,7 @@ Some structs and methods
  - All physical resources are managed by `frameTracker`
  - Different mapping strategies
    - `Identical` for lower half of kernel space
-   - `Linear` for `trampline` (*shared*)
+   - `Target` for `trampline` (*shared*)
    - `Framed` for *user space* and *user stack*
  - `permission` for all frames in this area
 

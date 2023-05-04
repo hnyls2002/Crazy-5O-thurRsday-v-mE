@@ -41,3 +41,10 @@ pub struct VARange {
     pub start: VirtAddr,
     pub end: VirtAddr,
 }
+
+impl VARange {
+    pub fn new(start: VirtAddr, end: VirtAddr) -> Self {
+        assert!(start <= end, "start must be smaller than end");
+        VARange { start, end }
+    }
+}

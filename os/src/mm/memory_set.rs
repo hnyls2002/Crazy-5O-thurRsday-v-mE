@@ -1,6 +1,6 @@
 use core::{arch::asm, cmp::max};
 
-use alloc::vec::Vec;
+use alloc::{collections::BTreeMap, vec::Vec};
 use lazy_static::lazy_static;
 use riscv::register::satp;
 
@@ -9,7 +9,7 @@ use crate::{
     info,
     kfc_sbi::mmio::MMIO,
     kfc_util::up_safe_cell::UPSafeCell,
-    mm::VARange,
+    mm::map_area::FillData,
 };
 
 use super::{Frame, MapArea, MapPerm, MapType, PTEFlags, PageTable, VPRange, VirtAddr};
@@ -103,51 +103,56 @@ impl MemorySet {
         info!("-----------------------kernel space-----------------------");
 
         // .text
-        let text = MapArea::new_bare(
+        let text = MapArea::new(
             VPRange::new(VirtAddr(stext as usize), VirtAddr(etext as usize)),
             MapType::Identical,
             MapPerm::R | MapPerm::X,
+            None,
         );
         memory_set.insert_new_map_area(text);
 
         // .rodata
-        let rodata = MapArea::new_bare(
+        let rodata = MapArea::new(
             VPRange::new(VirtAddr(srodata as usize), VirtAddr(erodata as usize)),
             MapType::Identical,
             MapPerm::R,
+            None,
         );
         memory_set.insert_new_map_area(rodata);
 
         // .data
-        let data = MapArea::new_bare(
+        let data = MapArea::new(
             VPRange::new(VirtAddr(sdata as usize), VirtAddr(edata as usize)),
             MapType::Identical,
             MapPerm::R | MapPerm::W,
+            None,
         );
         memory_set.insert_new_map_area(data);
 
         // .bss (with stack)
-        let bss = MapArea::new_bare(
+        let bss = MapArea::new(
             VPRange::new(VirtAddr(sbss_with_stack as usize), VirtAddr(ebss as usize)),
             MapType::Identical,
             MapPerm::R | MapPerm::W,
+            None,
         );
         // debug!("insert bss into kernel space");
         memory_set.insert_new_map_area(bss);
         // trace!("after bss");
 
         // available physical frames
-        let pool = MapArea::new_bare(
+        let pool = MapArea::new(
             VPRange::new(VirtAddr(ekernel as usize), VirtAddr(MEMORY_END as usize)),
             MapType::Identical,
             MapPerm::R | MapPerm::W,
+            None,
         );
         // trace!("insert pool into kernel space");
         memory_set.insert_new_map_area(pool);
 
         // MMIO
         for vp_range in MMIO {
-            let ma = MapArea::new_bare(vp_range, MapType::Identical, MapPerm::R | MapPerm::W);
+            let ma = MapArea::new(vp_range, MapType::Identical, MapPerm::R | MapPerm::W, None);
             memory_set.insert_new_map_area(ma);
         }
         memory_set
@@ -213,16 +218,17 @@ impl MemorySet {
                 }
 
                 // build a map_area and bound frames
-                let mut map_area =
-                    MapArea::new_bare(VPRange::new(start_va, end_va), MapType::Framed, map_perm);
-                map_area.bound_frames();
-                // TODO : this could be wrong...
-                map_area.fill_with_data(
-                    VARange {
-                        start: start_va,
-                        end: VirtAddr(start_va.0 + ph.file_size() as usize),
-                    },
+                let fill_data = FillData::new(
+                    start_va,
+                    VirtAddr(start_va.0 + ph.file_size() as usize),
                     &elf.input[ph.offset() as usize..(ph.offset() + ph.file_size()) as usize],
+                );
+
+                let map_area = MapArea::new(
+                    VPRange::new(start_va, end_va),
+                    MapType::Framed(BTreeMap::new()),
+                    map_perm,
+                    Some(fill_data),
                 );
 
                 // insert the map_area into memory_set
@@ -233,12 +239,12 @@ impl MemorySet {
         // build the user stack : next_page() actually build a guard page...
         let user_stack_bottom = max_end_va.ceil_page().next_page().start_address();
         let user_stack_top = VirtAddr(user_stack_bottom.0 + USER_STACK_SIZE);
-        let mut user_stack = MapArea::new_bare(
+        let user_stack = MapArea::new(
             VPRange::new(user_stack_bottom, user_stack_top),
-            MapType::Framed,
+            MapType::Framed(BTreeMap::new()),
             MapPerm::U | MapPerm::R | MapPerm::W,
+            None,
         );
-        user_stack.bound_frames();
         memory_set.insert_new_map_area(user_stack);
 
         // TODO : trap context

@@ -3,7 +3,7 @@ use core::fmt::Debug;
 use alloc::collections::BTreeMap;
 use bitflags::bitflags;
 
-use super::{frame_alloc, Frame, FrameTracker, Page, VARange, VPRange};
+use super::{frame_alloc, Frame, FrameTracker, Page, VARange, VPRange, VirtAddr};
 
 bitflags! {
     pub struct MapPerm : usize{
@@ -14,26 +14,24 @@ bitflags! {
     }
 }
 
-#[derive(PartialEq, Eq)]
 pub enum MapType {
     Identical,
-    Framed,
-    Linear,
+    Framed(BTreeMap<Page, FrameTracker>),
+    Target(Frame),
 }
 
 impl Debug for MapType {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::Identical => write!(f, "Identical"),
-            Self::Framed => write!(f, "Framed"),
-            Self::Linear => write!(f, "Linear"),
+            Self::Framed(_) => write!(f, "Framed"),
+            Self::Target(_) => write!(f, "Target"),
         }
     }
 }
 
 pub struct MapArea {
     pub vp_range: VPRange,
-    pub mem_frames: BTreeMap<Page, FrameTracker>,
     pub map_perm: MapPerm,
     pub map_type: MapType,
 }
@@ -56,29 +54,64 @@ impl PartialEq for MapArea {
 
 impl MapArea {
     /// ### no bounded to physical frames
-    pub fn new_bare(vp_range: VPRange, map_type: MapType, map_perm: MapPerm) -> Self {
+    fn new_bare(vp_range: VPRange, map_type: MapType, map_perm: MapPerm) -> Self {
         // trace!("new_bare: vp_range={:x?}", vp_range);
         MapArea {
-            mem_frames: BTreeMap::new(),
             vp_range,
             map_perm,
             map_type,
         }
     }
+
     /// #### bound each page to a physical frame
     /// then this map_area can manage the physical frames
     /// frames being allocated in this function
-    pub fn bound_frames(&mut self) {
-        assert!(self.mem_frames.is_empty(), "mem_frames is not empty");
-        assert!(
-            self.map_type == MapType::Framed,
-            "map_type is not Framed, no need to bound_frames"
-        );
-        for it in self.vp_range.iter() {
-            let page = it.value();
-            let frame = frame_alloc().unwrap();
-            self.mem_frames.insert(page, frame);
+    fn bound_frames(&mut self) {
+        if let MapType::Framed(ref mut mem_src) = self.map_type {
+            for it in self.vp_range.iter() {
+                let page = it.value();
+                let frame = frame_alloc().unwrap();
+                mem_src.insert(page, frame);
+            }
+        } else {
+            panic!("map_type is not Framed when binding frames");
         }
+    }
+
+    /// assume that start and end are not aligned
+    /// data's va_range can be smaller than map_area's va_range
+    fn fill_with_data(&mut self, fill_data: FillData) {
+        let mut cur_va = fill_data.fill_va_range.start;
+        let mut cur_offset = 0 as usize;
+        while cur_va < fill_data.fill_va_range.end {
+            let cur_va_end = cur_va.ceil_page().start_address();
+            let cur_offset_end = cur_offset + (cur_va_end.0 - cur_va.0);
+            let src = &fill_data.data[cur_offset..cur_offset_end];
+            let dst = &mut self.get_framed(cur_va.floor_page()).get_bytes_array_mut()
+                [cur_va.offset()..cur_va_end.offset()];
+            dst.copy_from_slice(src);
+
+            cur_va = cur_va_end;
+            cur_offset = cur_offset_end;
+        }
+    }
+}
+
+impl MapArea {
+    pub fn new(
+        vp_range: VPRange,
+        map_type: MapType,
+        map_perm: MapPerm,
+        fill_data: Option<FillData>,
+    ) -> Self {
+        let mut ret = Self::new_bare(vp_range, map_type, map_perm);
+        if let MapType::Framed(_) = ret.map_type {
+            ret.bound_frames();
+        }
+        if let Some(data) = fill_data {
+            ret.fill_with_data(data);
+        }
+        ret
     }
 
     /// ### get the physical frame of a virtual page
@@ -87,32 +120,22 @@ impl MapArea {
     pub fn get_framed(&self, vp: Page) -> Frame {
         match self.map_type {
             MapType::Identical => vp.into(),
-            MapType::Framed => self.mem_frames.get(&vp).expect("frame not found").0,
-            MapType::Linear => vp.into(), // TODO : linear mapping
+            MapType::Framed(ref mem_frames) => mem_frames.get(&vp).expect("frame not found").0,
+            MapType::Target(frame) => frame,
         }
     }
+}
 
-    /// assume that start and end are not aligned
-    /// data's va_range can be smaller than map_area's va_range
-    pub fn fill_with_data(&mut self, va_range: VARange, data: &[u8]) {
-        assert!(
-            self.map_type == MapType::Framed,
-            "map_type is not Framed when filling data"
-        );
-        assert!(!self.mem_frames.is_empty(), "mem_frames is empty");
+pub struct FillData<'a> {
+    pub fill_va_range: VARange,
+    pub data: &'a [u8],
+}
 
-        let mut cur_va = va_range.start;
-        let mut cur_offset = 0 as usize;
-        while cur_va < va_range.end {
-            let cur_va_end = cur_va.ceil_page().start_address();
-            let cur_offset_end = cur_offset + (cur_va_end.0 - cur_va.0);
-            let src = &data[cur_offset..cur_offset_end];
-            let dst = &mut self.get_framed(cur_va.floor_page()).get_bytes_array_mut()
-                [cur_va.offset()..cur_va_end.offset()];
-            dst.copy_from_slice(src);
-
-            cur_va = cur_va_end;
-            cur_offset = cur_offset_end;
+impl<'a> FillData<'a> {
+    pub fn new(start_va: VirtAddr, end_va: VirtAddr, data: &'a [u8]) -> Self {
+        FillData {
+            fill_va_range: VARange::new(start_va, end_va),
+            data,
         }
     }
 }
