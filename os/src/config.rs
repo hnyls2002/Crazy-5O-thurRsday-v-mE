@@ -4,6 +4,7 @@ use core::ops::Range;
 
 use crate::mm::VirtAddr;
 
+pub const BOOT_STACK_SIZE: usize = 0x10000; // 64KB
 pub const MEMORY_END: usize = 0x80800000; // 8 MB
 
 pub const KERNEL_HEAP_SIZE: usize = 0x30_0000; // 3MB

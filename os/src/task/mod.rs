@@ -1,6 +1,7 @@
 pub mod task_context;
 pub mod task_info;
 pub mod task_manager;
+pub mod switch;
 
 pub use self::task_manager::TASK_MANAGER;
 

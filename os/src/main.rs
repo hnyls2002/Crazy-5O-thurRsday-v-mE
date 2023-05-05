@@ -2,6 +2,7 @@
 #![no_std]
 #![feature(panic_info_message)]
 #![feature(alloc_error_handler)]
+#![feature(naked_functions, asm_const, asm_sym)]
 
 #[macro_use]
 mod console;
@@ -25,11 +26,28 @@ use core::arch::{asm, global_asm};
 use riscv::register::{mepc, mstatus, mtvec, satp, stvec, utvec::TrapMode};
 
 use crate::{
+    config::BOOT_STACK_SIZE,
     kfc_sbi::sbi_shutdown,
     trap::{m_mode_trap_handler, s_mode_trap_handler},
 };
 
-global_asm!(include_str!("entry.S"));
+#[naked]
+#[no_mangle]
+#[link_section = ".text.entry"]
+pub unsafe extern "C" fn _start() -> ! {
+    #[link_section = ".bss.stack"]
+    static mut BOOT_STACK: [u8; BOOT_STACK_SIZE] = [0; BOOT_STACK_SIZE];
+
+    asm!(
+    "la sp, {stack} + {stack_size}",
+    "call {m_start}",
+    stack = sym BOOT_STACK,
+    stack_size = const BOOT_STACK_SIZE,
+    m_start = sym machine_start,
+    options(noreturn));
+}
+
+// global_asm!(include_str!("entry.S"));
 global_asm!(include_str!("link_app.S"));
 
 // global/static variables are located in .bss section
