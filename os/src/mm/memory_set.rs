@@ -28,8 +28,12 @@ impl MemorySet {
         }
     }
 
-    pub fn get_pt_root_frame(&self) -> Frame {
+    fn get_pt_root_frame(&self) -> Frame {
         self.page_table.entry
+    }
+
+    pub fn get_satp_token(&self) -> usize {
+        8usize << 60 | self.get_pt_root_frame().get_ppn()
     }
 
     /// build realations in **page_table**
@@ -50,6 +54,7 @@ impl MemorySet {
         self.map_areas.push(map_area);
     }
 
+    #[allow(unused)]
     /// release the relations in **page_table**
     pub fn relase_area(&mut self, vp_range: &VPRange) {
         todo!()
@@ -75,6 +80,7 @@ extern "C" {
 lazy_static! {
     pub static ref KERNEL_SPACE: UPSafeCell<MemorySet> =
         UPSafeCell::new(MemorySet::new_kernel_space());
+    pub static ref KERNEL_SATP: usize = KERNEL_SPACE.exclusive_access().get_satp_token();
 }
 
 impl MemorySet {
@@ -166,20 +172,18 @@ impl MemorySet {
 }
 
 pub fn activate_kernel_space() {
-    let ppn = KERNEL_SPACE
-        .exclusive_access()
-        .get_pt_root_frame()
-        .get_ppn();
+    let token = KERNEL_SPACE.exclusive_access().get_satp_token();
 
     unsafe {
-        satp::write((8usize << 60) | ppn);
+        satp::write(token);
         // satp::set(satp::Mode::Sv39, 0, ppn);
         asm!("sfence.vma");
     };
 }
 
 impl MemorySet {
-    pub fn new_from_elf(elf_data: &[u8]) -> Self {
+    /// return (`memory_set`, `entry_point`, `user_stack_top`)
+    pub fn new_from_elf(elf_data: &[u8]) -> (Self, usize, usize) {
         let mut memory_set = MemorySet::new();
 
         memory_set.insert_new_map_area(MapArea::new_trampoline());
@@ -262,6 +266,10 @@ impl MemorySet {
         );
         memory_set.insert_new_map_area(user_stack);
 
-        memory_set
+        (
+            memory_set,
+            elf_headr.pt2.entry_point() as usize,
+            user_stack_top.0,
+        )
     }
 }

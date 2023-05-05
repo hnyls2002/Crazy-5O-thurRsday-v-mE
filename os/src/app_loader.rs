@@ -23,8 +23,9 @@ lazy_static! {
     static ref APP_LAYOUT_INFOS : Vec<(usize,usize)> = get_app_layout();
 }
 
+#[allow(unused)]
 pub fn loader_debug() {
-    warn!("The number of apps: {}", APP_LAYOUT_INFOS.len());
+    debug!("The number of apps: {}", APP_LAYOUT_INFOS.len());
     for app_layout in APP_LAYOUT_INFOS.iter() {
         warn!(
             "app start: {:#X}, app end: {:#X}, size is {}KB",
@@ -46,6 +47,11 @@ pub fn load_app(idx: usize) -> &'static [u8] {
     }
 }
 
+pub fn get_app_num() -> usize {
+    APP_LAYOUT_INFOS.len()
+}
+
+#[allow(unused)]
 pub fn get_app_address_range(idx: usize) -> (usize, usize) {
     assert!(idx < APP_LAYOUT_INFOS.len(), "app index out of range!");
     APP_LAYOUT_INFOS[idx]

@@ -23,9 +23,9 @@ extern crate alloc;
 use core::arch::{asm, global_asm};
 use mm::{activate_kernel_space, frame_allocator_init, heap_init, heap_test, mm_test};
 use riscv::register::{mepc, mstatus, mtvec, satp, stvec, utvec::TrapMode};
+use task::TASK_MANAGER;
 
 use crate::{
-    app_loader::loader_debug,
     kfc_sbi::sbi_shutdown,
     trap::{m_mode_trap_handler, s_mode_trap_handler},
 };
@@ -93,8 +93,6 @@ pub fn kernel_main() -> ! {
     println!("\x1b[34m{}\x1b[0m", kfc_sbi::LOGO);
     kernel_init();
 
-    loader_debug();
-
     sbi_shutdown(0);
 }
 
@@ -118,4 +116,6 @@ pub fn kernel_init() {
     //     let addr = 0x8090_0000 as *mut usize;
     //     addr.write_volatile("Hello, world!\0".as_ptr() as usize);
     // };
+
+    TASK_MANAGER.exclusive_access().init_all_apps();
 }

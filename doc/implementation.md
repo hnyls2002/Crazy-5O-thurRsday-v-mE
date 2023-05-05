@@ -78,7 +78,8 @@ Some context for switch back to an app's kernel stack.
 
 - [ ] fields including
  - `sp` for kernel stack
- - `ra` for `__ctx_restore`
+ - ~~`ra` for `__restore_ctx`~~ That's wrong!
+ - `__switch` does not go back to `__store_ctx`, instead, it goes to the return address of the *current running kernel function* like `run_next_task()`...
  - callee saved registers : cause `__switch` is a `naked` function
 - [ ] `switch` function
 
@@ -90,12 +91,12 @@ Some context for switch back to an app's kernel stack.
  - For back to user space : all registers (`sp` is `x2`), `sstatus`, `sepc`
  - we can know user's `satp` in kernel space (memory_set in kernel space...)
 
-- [ ] `__cxt_save` : save context in user space
-- [ ] `__cxt_restore` : jump to user space at first then restore context
+- [ ] `__ctx_save` : save context in user space
+- [ ] `__ctx_restore` : jump to user space at first then restore context
 - [ ] build the `trampline` page
 - [ ] `trap_handler` : dispatch traps
- - jump to it from `__cxt_save`
- - it jumps to `__cxt_restore` after handling the trap
+ - jump to it from `__ctx_save`
+ - it jumps to `__ctx_restore` after handling the trap
 
 **syscall**
 

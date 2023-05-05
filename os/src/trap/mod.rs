@@ -1,4 +1,4 @@
-mod trap_context;
+pub mod trap_context;
 
 use core::arch::{asm, global_asm};
 

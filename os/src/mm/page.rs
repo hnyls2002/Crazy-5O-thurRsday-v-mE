@@ -62,6 +62,10 @@ impl Frame {
         let pa = self.0;
         unsafe { slice::from_raw_parts_mut(pa as *mut u8, PAGE_BYTES) }
     }
+
+    pub fn get_mut<T>(&self) -> &'static mut T {
+        unsafe { (self.0 as *mut T).as_mut().unwrap() }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
