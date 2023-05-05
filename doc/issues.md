@@ -57,3 +57,16 @@ Why we can't directly use the symbols but store the symbols into `.quad` section
 #### `ELF` section's memory size vs file size
 - Memory size can be larger than file size
 - Some space in memory would not appear in the file, such as `.bss` section.
+
+#### Jump Address When Handling Traps
+- The location of `__save_ctx` and `__restore_ctx` in `trampoline` is wrong by `extern "C"` export. As we can only see the physical address, but `trampoline` will be mapped to the highest virtual page.
+- From `__save_ctx` to `trap_handler` : just `jr` to the symbol.
+- From `trap_handler` to `__restore_ctx` : calculate `__restore_ctx`'s virtual address by offset (trampoline page + offset).
+- The jump address :
+  - To `trap_handler` : in `TrapContext`
+  - To `__restore_ctx` : by function `trap_return()`
+  - `TaskContext.ra` is for *return address* in kernel function.
+
+#### Apps' Kernel Stack
+
+Each time traping into kernel, the kernel stack of this trapped app is empty...
