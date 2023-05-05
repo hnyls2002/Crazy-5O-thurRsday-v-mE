@@ -1,3 +1,5 @@
+use core::fmt::Debug;
+
 use crate::config::PAGE_BYTES;
 
 use super::{Frame, Page};
@@ -40,6 +42,15 @@ impl PhysAddr {
 pub struct VARange {
     pub start: VirtAddr,
     pub end: VirtAddr,
+}
+
+impl Debug for VARange {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("VARange")
+            .field("start", &self.start)
+            .field("end", &self.end)
+            .finish()
+    }
 }
 
 impl VARange {

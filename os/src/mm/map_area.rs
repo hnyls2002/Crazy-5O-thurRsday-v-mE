@@ -1,4 +1,4 @@
-use core::fmt::Debug;
+use core::{cmp::min, fmt::Debug};
 
 use alloc::collections::BTreeMap;
 use bitflags::bitflags;
@@ -88,9 +88,12 @@ impl MapArea {
     fn fill_with_data(&mut self, fill_data: FillData) {
         let mut cur_va = fill_data.fill_va_range.start;
         let mut cur_offset = 0 as usize;
+        // debug!("fill_data : {:#X?}", fill_data.fill_va_range);
         while cur_va < fill_data.fill_va_range.end {
-            let cur_va_end = cur_va.ceil_page().start_address();
+            let cur_va_end = fill_data.get_fill_addr_end(cur_va);
             let cur_offset_end = cur_offset + (cur_va_end.0 - cur_va.0);
+            // debug!("cur_offset={:#X?}", cur_offset);
+            // debug!("cur_offset_end={:#X?}", cur_offset_end);
             let src = &fill_data.data[cur_offset..cur_offset_end];
             let dst = &mut self.get_framed(cur_va.floor_page()).get_bytes_array_mut()
                 [cur_va.offset()..cur_va_end.offset()];
@@ -109,11 +112,15 @@ impl MapArea {
         map_perm: MapPerm,
         fill_data: Option<FillData>,
     ) -> Self {
+        // debug!("new: vp_range={:#X?}", vp_range);
+        // debug!("new: map_type={:#X?}", map_type);
+        // debug!("new: map_perm={:#X?}", map_perm);
         let mut ret = Self::new_bare(vp_range, map_type, map_perm);
         if let MapType::Framed(_) = ret.map_type {
             ret.bound_frames();
         }
         if let Some(data) = fill_data {
+            // trace!("filling data");
             ret.fill_with_data(data);
         }
         ret
@@ -151,5 +158,10 @@ impl<'a> FillData<'a> {
             fill_va_range: VARange::new(start_va, end_va),
             data,
         }
+    }
+    pub fn get_fill_addr_end(&self, cur_va: VirtAddr) -> VirtAddr {
+        let mut ret = cur_va.floor_page().next_page().start_address();
+        ret.0 = min(ret.0, self.fill_va_range.end.0);
+        ret
     }
 }
