@@ -30,7 +30,7 @@ pub const KERNEL_STACK_SIZE: usize = 0x2000; // 8KB
 
 // trap
 pub const VIRT_ADDR_MAX: VirtAddr = VirtAddr(usize::MAX);
-pub const TRAMPOLINE_VIRT_ADDR: VirtAddr = VirtAddr(VIRT_ADDR_MAX.0 - PAGE_BYTES);
+pub const TRAMPOLINE_VIRT_ADDR: VirtAddr = VirtAddr(VIRT_ADDR_MAX.0 - PAGE_BYTES + 1);
 pub const TRAP_CTX_VIRT_ADDR: VirtAddr = VirtAddr(TRAMPOLINE_VIRT_ADDR.0 - PAGE_BYTES);
 
 // a guard page between each task's kernel stack
