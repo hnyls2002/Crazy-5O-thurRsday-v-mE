@@ -14,3 +14,26 @@ pub use map_area::{MapArea, MapPerm, MapType};
 pub use memory_set::{activate_kernel_space, MemorySet, KERNEL_SPACE};
 pub use page::{Frame, Page, VPRange};
 pub use page_table::{PTEFlags, PageTable, PTE};
+
+pub fn init() {
+    // buddy allocator
+    heap_init();
+    heap_test();
+
+    // physical frame allocator
+    frame_allocator_init();
+
+    // kernel memory spacek
+    mm_test::remap_test();
+    activate_kernel_space();
+
+    // exception test code...
+    // unsafe {
+    //     // illegal instruction
+    //     error!("mtvec: {:#X?}", mtvec::read());
+
+    //     // page fault
+    //     let addr = 0x8090_0000 as *mut usize;
+    //     addr.write_volatile("Hello, world!\0".as_ptr() as usize);
+    // };
+}

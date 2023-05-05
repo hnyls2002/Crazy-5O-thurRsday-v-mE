@@ -21,9 +21,8 @@ mod trap;
 extern crate alloc;
 
 use core::arch::{asm, global_asm};
-use mm::{activate_kernel_space, frame_allocator_init, heap_init, heap_test, mm_test};
+
 use riscv::register::{mepc, mstatus, mtvec, satp, stvec, utvec::TrapMode};
-use task::TASK_MANAGER;
 
 use crate::{
     kfc_sbi::sbi_shutdown,
@@ -97,25 +96,6 @@ pub fn kernel_main() -> ! {
 }
 
 pub fn kernel_init() {
-    // buddy allocator
-    heap_init();
-    heap_test();
-
-    // physical frame allocator
-    frame_allocator_init();
-
-    mm_test::remap_test();
-    activate_kernel_space();
-
-    // exception test code...
-    // unsafe {
-    //     // illegal instruction
-    //     error!("mtvec: {:#X?}", mtvec::read());
-
-    //     // page fault
-    //     let addr = 0x8090_0000 as *mut usize;
-    //     addr.write_volatile("Hello, world!\0".as_ptr() as usize);
-    // };
-
-    TASK_MANAGER.exclusive_access().init_all_apps();
+    mm::init();
+    task::init();
 }
