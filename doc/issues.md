@@ -1,24 +1,5 @@
 ## Issues
 
-#### M-mode mret to S-mode
-- Set `mstatus.mpp` to `S-mode`, not `U-mode` or `M-mode`
-- Set `mstatus.mepc` to supervisor main function
-
-#### Interrupts and Exceptions Delegation
-- `mideleg` settings
-- `medeleg` settings
-
-#### Interrupts Enable
-- ~~`mstatus.mie` settings~~
-- `sstatus.sie` settings
-
-#### Timer Interrupts Delegation
-- TBD   
-
-#### Trap Vector Settings
-- `Direct` or `Vectored` mode, which is placed at `mtvec` or `stvec`'s **last 2 bits**.
-- So **four bytes** aligned is needed for `mtvec` or `stvec`.
-
 #### `repr(C)` and `repr(aligned(4096))`
 
 - `repr(C)` - Align the fields as the same as the `C` compiler.
@@ -70,3 +51,9 @@ Why we can't directly use the symbols but store the symbols into `.quad` section
 #### Apps' Kernel Stack
 
 Each time traping into kernel, the kernel stack of this trapped app is empty...
+
+#### `noreturn` options in `asm!` macro
+
+>noreturn: The asm! block never returns, and its return type is defined as ! (never). Behavior is undefined if execution falls through past the end of the asm code. A noreturn asm block behaves just like a function which doesn't return; notably, local variables in scope are not dropped before it is invoked.
+
+When the inline-asm acts as a jump block, we should add `noreturn` option to the `asm!` macro.
