@@ -44,6 +44,7 @@ Why we can't directly use the symbols but store the symbols into `.quad` section
 - From `__save_ctx` to `trap_handler` : just `jr` to the symbol.
 - From `trap_handler` to `__restore_ctx` : calculate `__restore_ctx`'s virtual address by offset (trampoline page + offset).
 - The jump address :
+  - To `__save_ctx` : in `stvec = TRAMPOLINE` 
   - To `trap_handler` : in `TrapContext`
   - To `__restore_ctx` : by function `trap_return()`
   - `TaskContext.ra` is for *return address* in kernel function.
@@ -57,3 +58,22 @@ Each time traping into kernel, the kernel stack of this trapped app is empty...
 >noreturn: The asm! block never returns, and its return type is defined as ! (never). Behavior is undefined if execution falls through past the end of the asm code. A noreturn asm block behaves just like a function which doesn't return; notably, local variables in scope are not dropped before it is invoked.
 
 When the inline-asm acts as a jump block, we should add `noreturn` option to the `asm!` macro.
+
+#### Rust `extern` and `[no_mangle]` attribute
+
+- `extern` : import symbols from other files or make symbols exportable.
+- https://slightknack.github.io/rust-abi-wiki/intro/what_is_an_ABI.html
+- https://doc.rust-lang.org/nomicon/ffi.html
+- https://doc.rust-lang.org/reference/abi.html
+- When externing, the symbols should follow some ABI rules. By default, rust uses the `C` ABI. So we use `extern "C"` to extern symbols.
+
+`[no_mangle]` attribute tells rust compiler not to mangle the symbol so that the symbol is visible in assembly code.
+
+Summary :
+
+- `extern "C"` makes *extern* and follow the `C` ABI.
+- `[no_mangle]` just makes the symbol visible.
+
+But for safety, in this project : 
+- When using extern symbols : `extern "C"`
+- ~~When making rust symbols used externally : `#[no_mangle]` + `extern "C"`~~ It seems that `#[no_mangle]` is enough...
