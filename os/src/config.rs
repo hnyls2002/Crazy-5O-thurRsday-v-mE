@@ -38,7 +38,9 @@ pub const TRAP_CTX_VIRT_ADDR: VirtAddr = VirtAddr(TRAMPOLINE_VIRT_ADDR.0 - PAGE_
 pub fn kernel_stack_range(task_id: usize) -> (VirtAddr, VirtAddr) {
     let space_size = VirtAddr(KERNEL_STACK_SIZE + PAGE_BYTES).ceil_page().0;
     (
-        VirtAddr(TRAMPOLINE_VIRT_ADDR.0 - task_id * space_size + PAGE_BYTES),
-        VirtAddr(TRAMPOLINE_VIRT_ADDR.0 - task_id * space_size + PAGE_BYTES + KERNEL_STACK_SIZE),
+        VirtAddr(TRAMPOLINE_VIRT_ADDR.0 - (task_id + 1) * space_size + PAGE_BYTES),
+        VirtAddr(
+            TRAMPOLINE_VIRT_ADDR.0 - (task_id + 1) * space_size + PAGE_BYTES + KERNEL_STACK_SIZE,
+        ),
     )
 }
