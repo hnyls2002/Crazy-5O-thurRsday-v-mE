@@ -23,17 +23,14 @@ extern crate alloc;
 
 use core::arch::{asm, global_asm};
 
-use riscv::register::{mepc, mstatus, mtvec, satp, stvec, utvec::TrapMode};
+use riscv::register::{mepc, mstatus, mtvec, satp, utvec::TrapMode};
 
-use crate::{
-    config::BOOT_STACK_SIZE,
-    kfc_sbi::sbi_shutdown,
-    trap::{m_mode_trap_handler, s_mode_trap_handler},
-};
+use crate::{config::BOOT_STACK_SIZE, kfc_sbi::sbi_shutdown, trap::machine_trap_panic};
 
 #[naked]
 #[no_mangle]
 #[link_section = ".text.entry"]
+// naked should extern "C"...
 pub unsafe extern "C" fn _start() -> ! {
     #[link_section = ".bss.stack"]
     static mut BOOT_STACK: [u8; BOOT_STACK_SIZE] = [0; BOOT_STACK_SIZE];
@@ -87,7 +84,7 @@ pub fn machine_start() -> ! {
         asm!("csrw sie, {}", in(reg) 0x222);
 
         // TODO : for temporary test
-        mtvec::write(m_mode_trap_handler as usize, TrapMode::Direct);
+        mtvec::write(machine_trap_panic as usize, TrapMode::Direct);
 
         // physical memory protection
         asm!("csrw pmpaddr0, {}", in(reg) 0x3fffffffffffff as usize);
@@ -102,9 +99,6 @@ pub fn machine_start() -> ! {
 
 #[no_mangle]
 pub fn kernel_main() -> ! {
-    // TODO : temporary set S-mode trap handler
-    unsafe { stvec::write(s_mode_trap_handler as usize, TrapMode::Direct) };
-
     info!("Entering into kernel_main function!");
     info!("UART print test passed!");
     println!("\x1b[34m{}\x1b[0m", kfc_sbi::LOGO);

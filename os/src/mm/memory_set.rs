@@ -1,14 +1,9 @@
-use core::{arch::asm, cmp::max};
+use core::cmp::max;
 
 use alloc::{collections::BTreeMap, vec::Vec};
-use lazy_static::lazy_static;
-use riscv::register::satp;
 
 use crate::{
-    config::{MEMORY_END, TRAMPOLINE_VIRT_ADDR, TRAP_CTX_VIRT_ADDR, USER_STACK_SIZE},
-    info,
-    kfc_sbi::mmio::MMIO,
-    kfc_util::up_safe_cell::UPSafeCell,
+    config::{TRAMPOLINE_VIRT_ADDR, TRAP_CTX_VIRT_ADDR, USER_STACK_SIZE},
     mm::map_area::FillData,
 };
 
@@ -21,7 +16,7 @@ pub struct MemorySet {
 
 impl MemorySet {
     /// #### only page table root is set
-    pub fn new() -> Self {
+    pub fn new_bare() -> Self {
         MemorySet {
             map_areas: Vec::new(),
             page_table: PageTable::new(),
@@ -61,130 +56,10 @@ impl MemorySet {
     }
 }
 
-#[allow(unused)]
-extern "C" {
-    pub fn stext();
-    pub fn etext();
-    pub fn srodata();
-    pub fn erodata();
-    pub fn sdata();
-    pub fn edata();
-    pub fn sbss_with_stack();
-    pub fn sbss();
-    pub fn ebss();
-    pub fn skernel();
-    pub fn ekernel();
-    pub fn strampoline();
-}
-
-lazy_static! {
-    pub static ref KERNEL_SPACE: UPSafeCell<MemorySet> =
-        UPSafeCell::new(MemorySet::new_kernel_space());
-    pub static ref KERNEL_SATP: usize = KERNEL_SPACE.exclusive_access().get_satp_token();
-}
-
-impl MemorySet {
-    pub fn new_kernel_space() -> Self {
-        let mut memory_set = MemorySet::new();
-
-        info!("-----------------------kernel space-----------------------");
-        info!(
-            ".text\t\t\t\t[{:#X?}, {:#X?})",
-            stext as usize, etext as usize
-        );
-        info!(
-            ".rodata\t\t\t\t[{:#X?}, {:#X?})",
-            srodata as usize, erodata as usize
-        );
-        info!(
-            ".data\t\t\t\t[{:#X?}, {:#X?})",
-            sdata as usize, edata as usize
-        );
-        info!(".bss\t\t\t\t[{:#X?}, {:#X?})", sbss as usize, ebss as usize);
-        info!(
-            "frame pool\t\t\t[{:#X?}, {:#X?})",
-            ekernel as usize, MEMORY_END as usize
-        );
-        info!(
-            "trampoline\t\t\t[{:#X?}, {:#X?})",
-            strampoline as usize,
-            strampoline as usize + 0x1000
-        );
-        info!("-----------------------kernel space-----------------------");
-
-        memory_set.insert_new_map_area(MapArea::new_trampoline());
-
-        // .text
-        let text = MapArea::new(
-            VPRange::new(VirtAddr(stext as usize), VirtAddr(etext as usize)),
-            MapType::Identical,
-            MapPerm::R | MapPerm::X,
-            None,
-        );
-        memory_set.insert_new_map_area(text);
-
-        // .rodata
-        let rodata = MapArea::new(
-            VPRange::new(VirtAddr(srodata as usize), VirtAddr(erodata as usize)),
-            MapType::Identical,
-            MapPerm::R,
-            None,
-        );
-        memory_set.insert_new_map_area(rodata);
-
-        // .data
-        let data = MapArea::new(
-            VPRange::new(VirtAddr(sdata as usize), VirtAddr(edata as usize)),
-            MapType::Identical,
-            MapPerm::R | MapPerm::W,
-            None,
-        );
-        memory_set.insert_new_map_area(data);
-
-        // .bss (with stack)
-        let bss = MapArea::new(
-            VPRange::new(VirtAddr(sbss_with_stack as usize), VirtAddr(ebss as usize)),
-            MapType::Identical,
-            MapPerm::R | MapPerm::W,
-            None,
-        );
-        // debug!("insert bss into kernel space");
-        memory_set.insert_new_map_area(bss);
-        // trace!("after bss");
-
-        // available physical frames
-        let pool = MapArea::new(
-            VPRange::new(VirtAddr(ekernel as usize), VirtAddr(MEMORY_END as usize)),
-            MapType::Identical,
-            MapPerm::R | MapPerm::W,
-            None,
-        );
-        // trace!("insert pool into kernel space");
-        memory_set.insert_new_map_area(pool);
-
-        // MMIO
-        for vp_range in MMIO {
-            let ma = MapArea::new(vp_range, MapType::Identical, MapPerm::R | MapPerm::W, None);
-            memory_set.insert_new_map_area(ma);
-        }
-        memory_set
-    }
-}
-
-pub fn activate_kernel_space() {
-    let token = KERNEL_SPACE.exclusive_access().get_satp_token();
-
-    unsafe {
-        satp::write(token);
-        // satp::set(satp::Mode::Sv39, 0, ppn);
-        asm!("sfence.vma");
-    };
-}
-
 impl MemorySet {
     /// return (`memory_set`, `entry_point`, `user_stack_top`)
     pub fn new_from_elf(elf_data: &[u8]) -> (Self, usize, usize) {
-        let mut memory_set = MemorySet::new();
+        let mut memory_set = MemorySet::new_bare();
 
         memory_set.insert_new_map_area(MapArea::new_trampoline());
 

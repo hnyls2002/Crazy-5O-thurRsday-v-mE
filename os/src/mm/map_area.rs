@@ -5,7 +5,7 @@ use bitflags::bitflags;
 
 use crate::{
     config::{TRAMPOLINE_VIRT_ADDR, VIRT_ADDR_MAX},
-    trap::TRAMPOLINE_FRAME,
+    trap::trampoline_frame,
 };
 
 use super::{frame_alloc, Frame, FrameTracker, Page, VARange, VPRange, VirtAddr};
@@ -129,7 +129,7 @@ impl MapArea {
     pub fn new_trampoline() -> Self {
         Self::new(
             VPRange::new(TRAMPOLINE_VIRT_ADDR, VIRT_ADDR_MAX),
-            MapType::Target(*TRAMPOLINE_FRAME),
+            MapType::Target(trampoline_frame()),
             MapPerm::X | MapPerm::R,
             None,
         )

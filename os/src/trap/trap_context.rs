@@ -5,7 +5,7 @@ use riscv::register::sstatus;
 pub struct TrapContext {
     pub x: [usize; 32],
     pub s_status: usize,
-    pub sepc: usize,
+    pub s_epc: usize,
     // for back to user space
     pub kernel_satp: usize,
     pub kernel_sp: usize,
@@ -27,7 +27,7 @@ impl TrapContext {
         Self {
             x,
             s_status: s_status.bits(),
-            sepc: entry,
+            s_epc: entry,
             kernel_satp,
             kernel_sp,
             trap_handler,

@@ -1,6 +1,7 @@
 pub mod address;
 pub mod frame_allocator;
 pub mod heap_allocator;
+pub mod kernel_space;
 pub mod map_area;
 pub mod memory_set;
 pub mod mm_test;
@@ -11,9 +12,14 @@ pub use address::{PhysAddr, VARange, VirtAddr};
 pub use frame_allocator::{frame_alloc, frame_allocator_init, frame_dealloc, FrameTracker};
 pub use heap_allocator::{heap_init, heap_test::heap_test};
 pub use map_area::{MapArea, MapPerm, MapType};
-pub use memory_set::{activate_kernel_space, MemorySet, KERNEL_SPACE};
+pub use memory_set::MemorySet;
 pub use page::{Frame, Page, VPRange};
 pub use page_table::{PTEFlags, PageTable, PTE};
+
+use self::{
+    kernel_space::{activate_kernel_space, kernel_space_init},
+    mm_test::remap_test,
+};
 
 pub fn init() {
     // buddy allocator
@@ -24,7 +30,8 @@ pub fn init() {
     frame_allocator_init();
 
     // kernel memory spacek
-    mm_test::remap_test();
+    kernel_space_init();
+    remap_test();
     activate_kernel_space();
 
     // exception test code...
