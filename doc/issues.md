@@ -77,3 +77,7 @@ Summary :
 But for safety, in this project : 
 - When using extern symbols : `extern "C"`
 - ~~When making rust symbols used externally : `#[no_mangle]` + `extern "C"`~~ It seems that `#[no_mangle]` is enough...
+
+#### TLB and cache coherence
+- `sfence.vma` twice before and after *address space switch*
+- Cache conflicts will not happed as cache uses VIPT.

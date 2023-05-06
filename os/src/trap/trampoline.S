@@ -32,16 +32,22 @@ __save_trap_ctx:
     ld t0, 34*8(sp) # kernel_satp
     ld t1, 36*8(sp) # trap_handler
     ld sp, 35*8(sp) # set sp to kernel_sp
+
+    sfence.vma
     csrw satp, t0 # into kernel space
     sfence.vma # flush TLB
+
     jr t1
 
 # restore needs to know :
 # a0 : user_satp to back to user space
 # a1 : trap_ctx pointer
 __restore_trap_ctx:
+
+    sfence.vma
     csrw satp, a0 # back to user space
     sfence.vma # flush TLB
+
     mv sp, a1 # sp -> trap_ctx
     csrw sscratch, sp # set sscratch to trap_ctx
     ld t0, 32*8(sp) # sstatus

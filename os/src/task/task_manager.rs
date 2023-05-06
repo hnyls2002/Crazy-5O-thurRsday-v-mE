@@ -45,7 +45,6 @@ impl TaskManagerInner {
         for i in 0..self.task_num {
             self.task_infos.push(TaskInfo::new_init(i));
         }
-        todo!()
     }
 }
 
@@ -58,3 +57,12 @@ pub fn get_cur_trap_ctx_mut() -> &'static mut TrapContext {
     let cur_frame = TASK_MANAGER.exclusive_access().task_infos[cur_id].trap_ctx_frame;
     cur_frame.get_mut()
 }
+
+pub fn get_cur_token() -> usize {
+    let task_manager = TASK_MANAGER.exclusive_access();
+    task_manager.task_infos[task_manager.cur_task]
+        .addr_space
+        .get_satp_token()
+}
+
+pub fn run_first_task() {}

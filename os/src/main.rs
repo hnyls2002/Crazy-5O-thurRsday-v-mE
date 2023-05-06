@@ -25,7 +25,10 @@ use core::arch::{asm, global_asm};
 
 use riscv::register::{mepc, mstatus, mtvec, satp, utvec::TrapMode};
 
-use crate::{config::BOOT_STACK_SIZE, kfc_sbi::sbi_shutdown, trap::machine_trap_panic};
+use crate::{
+    config::BOOT_STACK_SIZE, kfc_sbi::sbi_shutdown, task::task_manager::run_first_task,
+    trap::machine_trap_panic,
+};
 
 #[naked]
 #[no_mangle]
@@ -102,7 +105,10 @@ pub fn kernel_main() -> ! {
     info!("Entering into kernel_main function!");
     info!("UART print test passed!");
     println!("\x1b[34m{}\x1b[0m", kfc_sbi::LOGO);
+
     kernel_init();
+
+    run_first_task();
 
     sbi_shutdown(0);
 }

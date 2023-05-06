@@ -1,12 +1,15 @@
 pub mod trap_context;
 
+use crate::config::TRAP_CTX_VIRT_ADDR;
 use core::arch::{asm, global_asm};
 
 use riscv::register::{scause, stval, stvec};
 
 use crate::{
-    config::TRAMPOLINE_VIRT_ADDR, mm::Frame, syscall_impl::syscall_dispathcer,
-    task::task_manager::get_cur_trap_ctx_mut,
+    config::TRAMPOLINE_VIRT_ADDR,
+    mm::Frame,
+    syscall_impl::syscall_dispathcer,
+    task::task_manager::{get_cur_token, get_cur_trap_ctx_mut},
 };
 
 global_asm!(include_str!("trampoline.S"));
@@ -59,8 +62,13 @@ pub fn trap_return() -> ! {
     }
     let restore_va =
         TRAMPOLINE_VIRT_ADDR.0 + __restore_trap_ctx as usize - __save_trap_ctx as usize;
+    let user_satp: usize = get_cur_token();
     unsafe {
-        asm!("jr {addr}", addr = in(reg) restore_va, options(noreturn));
+        asm!("jr {addr}", 
+            addr = in(reg) restore_va,
+            in("a0") user_satp,
+            in("a1") TRAP_CTX_VIRT_ADDR.0,
+            options(noreturn));
     }
 }
 
