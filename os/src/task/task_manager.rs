@@ -1,7 +1,10 @@
 use alloc::vec::Vec;
 
 use crate::{
-    app_loader::get_app_num, kfc_util::up_safe_cell::UPSafeCell, trap::trap_context::TrapContext,
+    app_loader::get_app_num,
+    kfc_util::up_safe_cell::UPSafeCell,
+    task::{switch::__switch, task_context::TaskContext},
+    trap::trap_context::TrapContext,
 };
 use core::ops::Deref;
 use lazy_static::lazy_static;
@@ -65,4 +68,12 @@ pub fn get_cur_token() -> usize {
         .get_satp_token()
 }
 
-pub fn run_first_task() {}
+pub fn task_ctx_ptr(id: usize) -> *mut TaskContext {
+    (&TASK_MANAGER.exclusive_access().task_infos[id].task_ctx) as *const _ as *mut _
+}
+
+pub fn run_first_task() {
+    info!("start running the first task!");
+    let unused = TaskContext::empty();
+    __switch(&unused as *const _ as *mut _, task_ctx_ptr(0));
+}
