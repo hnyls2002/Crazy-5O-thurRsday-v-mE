@@ -36,6 +36,8 @@ pub extern "C" fn __switch(ctx1: *mut TaskContext, ctx2: *const TaskContext) {
     ld s9, 11*8(a1)
     ld s10, 12*8(a1)
     ld s11, 13*8(a1)
+
+    ret
     "#,
             options(noreturn)
         );
