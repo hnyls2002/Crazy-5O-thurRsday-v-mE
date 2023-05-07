@@ -4,7 +4,7 @@ use riscv::addr::BitField;
 
 use crate::config::{PAGE_BYTES_BITS, PTE_FLAGS_MASK, PTE_PPN_RANGE};
 
-use super::{frame_alloc, Frame, FrameTracker, Page, PhysAddr, VirtAddr};
+use super::{frame_alloc, Frame, FrameTracker, Page};
 
 bitflags! {
     pub struct PTEFlags : usize{

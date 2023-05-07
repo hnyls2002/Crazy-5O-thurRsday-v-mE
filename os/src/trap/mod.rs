@@ -29,25 +29,24 @@ pub fn trap_handler() -> ! {
     let s_cause = scause::read();
     let s_tval = stval::read();
     match s_cause.cause() {
-        scause::Trap::Exception(e) => match e {
-            scause::Exception::UserEnvCall => {
-                // ecall is four bytes length
-                // error!("[trap_handler] sepc : {:X}", trap_ctx.s_epc);
-                // error!("[trap_handler] sp : {:X}", trap_ctx.x[2]);
-                trap_ctx.s_epc += 4;
-                trap_ctx.x[10] = syscall_dispathcer(
-                    trap_ctx.x[17],
-                    [trap_ctx.x[10], trap_ctx.x[11], trap_ctx.x[12]],
-                ) as usize;
+        scause::Trap::Exception(e) => {
+            match e {
+                scause::Exception::UserEnvCall => {
+                    // ecall is four bytes length
+                    // error!("[trap_handler] sepc : {:X}", trap_ctx.s_epc);
+                    // error!("[trap_handler] sp : {:X}", trap_ctx.x[2]);
+                    trap_ctx.s_epc += 4;
+                    trap_ctx.x[10] = syscall_dispathcer(
+                        trap_ctx.x[17],
+                        [trap_ctx.x[10], trap_ctx.x[11], trap_ctx.x[12]],
+                    ) as usize;
+                }
+                _ => {
+                    info!("The exception \x1b[31m[{:?}]\x1b[34m happen at address : {:#X}, s_val : {:#X}", e,trap_ctx.s_epc, s_tval);
+                    trap_ctx.s_epc += 4;
+                }
             }
-            _ => {
-                info!("The exception \x1b[31m[{:?}]\x1b[34m happen", e);
-                info!(
-                    "at address : \x1b[31m{:X}\x1b[34m, s_val : \x1b[31m{:X}\x1b[34m",
-                    trap_ctx.s_epc, s_tval
-                );
-            }
-        },
+        }
         scause::Trap::Interrupt(i) => match i {
             scause::Interrupt::SupervisorTimer => todo!(),
             _ => panic!("{:?} is not supported!", i),

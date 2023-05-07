@@ -13,8 +13,16 @@ use crate::{
 
 use super::task_context::TaskContext;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TaskStatus {
+    Ready,
+    Running,
+    Excited,
+}
+
 pub struct TaskInfo {
     pub task_id: usize,
+    pub status: TaskStatus,
     pub addr_space: MemorySet,
     pub task_ctx: TaskContext,
     pub trap_ctx_frame: Frame,
@@ -58,6 +66,7 @@ impl TaskInfo {
 
         TaskInfo {
             task_id,
+            status: TaskStatus::Ready,
             addr_space: user_space,
             task_ctx,
             trap_ctx_frame,

@@ -27,7 +27,6 @@ use riscv::register::{mepc, mstatus, mtvec, satp, utvec::TrapMode};
 
 use crate::{
     config::{BOOT_STACK_SIZE, MEMORY_END},
-    kfc_sbi::sbi_shutdown,
     task::task_manager::run_first_task,
     trap::machine_trap_panic,
 };
@@ -105,7 +104,7 @@ pub fn machine_start() -> ! {
 pub fn kernel_main() -> ! {
     kernel_init();
     run_first_task();
-    sbi_shutdown(0);
+    panic!("Unreachable in kernel_main!");
 }
 
 pub fn kernel_init() {
