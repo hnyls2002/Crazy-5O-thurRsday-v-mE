@@ -3,10 +3,11 @@ use alloc::vec::Vec;
 use crate::{
     app_loader::get_app_num,
     kfc_util::up_safe_cell::UPSafeCell,
+    mm::VirtAddr,
     task::{switch::__switch, task_context::TaskContext},
     trap::trap_context::TrapContext,
 };
-use core::ops::Deref;
+use core::{cmp::min, ops::Deref};
 use lazy_static::lazy_static;
 
 use super::task_info::TaskInfo;
@@ -70,6 +71,27 @@ pub fn get_cur_token() -> usize {
 
 pub fn task_ctx_ptr(id: usize) -> *mut TaskContext {
     (&TASK_MANAGER.exclusive_access().task_infos[id].task_ctx) as *const _ as *mut _
+}
+
+// virtual address may be continous, but physical address may not be
+pub fn translate_cur_byte_buffer(buf: usize, len: usize) -> Option<Vec<&'static [u8]>> {
+    let cur_id = TASK_MANAGER.exclusive_access().cur_task;
+    let page_table = &TASK_MANAGER.exclusive_access().task_infos[cur_id]
+        .addr_space
+        .page_table;
+    let mut ret = Vec::new();
+    let mut cur_va = VirtAddr(buf);
+    let mut rem_len = len;
+    while rem_len > 0 {
+        let cur_slice_len = min(cur_va.floor_page().next_page().0 - cur_va.0, rem_len);
+        let cur_frame = page_table.translate_vp(cur_va.floor_page())?;
+        let slice = &cur_frame.get_bytes_array_mut()
+            [cur_va.get_offset()..cur_va.get_offset() + cur_slice_len];
+        ret.push(slice);
+        cur_va.0 += cur_slice_len;
+        rem_len -= cur_slice_len;
+    }
+    Some(ret)
 }
 
 pub fn run_first_task() {
