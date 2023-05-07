@@ -81,3 +81,6 @@ But for safety, in this project :
 #### TLB and cache coherence
 - `sfence.vma` twice before and after *address space switch*
 - Cache conflicts will not happed as cache uses VIPT.
+
+#### `drop(RefMut)` before switch
+- If not drop, when we switch to another task, the `RefMut` will be still held by the previous task. So the new task can't get the `RefMut` and will panic.

@@ -23,6 +23,9 @@
 - use it through `borrow() -> Ref<T>` or `borrow_mut() -> RefMut<T>`
 - check borrow rules at runtime
 
+#### `borrw_mut()` and `drop()` (manually)
+- The `drop()` function will be automatically called when the variable goes out of scope. (That is, even the value will not be used anymore, the compiler wouldn't call `drop()` until the current scope ends.)
+- We can manually call `drop(RefMut)` to release the borrow lock.
 
 #### Cell
 - interior mutability
