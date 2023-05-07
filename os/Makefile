@@ -32,7 +32,7 @@ $(KERNEL_BIN): kernel
 
 kernel:
 	@cd ../user && make build
-	@cargo build $(MODE_ARG) --features $(LOG)
+	@cargo build $(MODE_ARG) --features $(LOG) --release
 	@file $(KERNEL_ELF)
 
 disasm: kernel
