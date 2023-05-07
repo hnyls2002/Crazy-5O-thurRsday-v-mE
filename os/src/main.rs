@@ -101,6 +101,8 @@ pub fn machine_start() -> ! {
 #[no_mangle]
 pub fn kernel_main() -> ! {
     kernel_init();
+    // not need to enable s-mode interrupt here
+    // unsafe { sstatus::set_sie() };
     run_first_task();
     panic!("Unreachable in kernel_main!");
 }

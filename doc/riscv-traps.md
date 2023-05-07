@@ -63,3 +63,28 @@ According to *xv6*, set `pmpaddr0` and `pmpcfg0`.
 #### Trap Vector Align
 - `Direct` or `Vectored` mode, which is placed at `mtvec` or `stvec`'s **last 2 bits**.
 - So **four bytes** aligned is needed for `mtvec` or `stvec`.
+
+#### My Timer Interrupt Implementation
+
+- When in S-mode, interrupt is not allowed, which is promised by `sstatus.sie = 0`. When `sstatus.sie` is clear, trap can not happen when current mode is S-mode, but can interrupt into S-mode when current mode is U-mode. (`sstatus.sie` is ignored when current mode is U-mode)
+
+![image-20230508082106687](./assets/image-20230508082106687.png)
+
+- When in U-mode, first Machine Timer Interrupt is handled by `mtimer`, then back to U-mode, delegation works, immediately trap into S-mode, which is handled by `stvec`.
+
+Some settings :
+
+- `timer_int()` when in M-mode (booting)
+  **M-mode timer handler just set next timer trigger**
+  - Make scratch space for `mtimer`
+  - set `mtvec` to `mtimer`
+  - set `mstatus.mie` and `mie.mtie` to enable MTI in M-mode
+- Enable Supervisor Timer Interrupt (only when current mode is U-mode)
+  - `mideleg` set befor.
+  - `sie.stie` set before.
+  - `sstatus.sie` not set, that why STI can not happen when in S-mode.
+
+Further Possible Implementation :
+
+- When in S-mode, we can set `sstatus.sie` to allow interrupt in S-mode (`__save_ctx` has been done), but another `stvec = kerneltrap` is needed to handle the interrupt.
+- When `trap_return()`, clear `sstatus.sie` to disable interrupt in S-mode, for preventing interrupt when `__restore_ctx`.
