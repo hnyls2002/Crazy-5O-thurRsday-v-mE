@@ -52,7 +52,7 @@ Some structs and methods
 
 - [x] Figure out *kernel address space layout* and *user address space layout*
 - [x] `kernel_space_init()`
-- [ ] `new_user_space()` for a single application
+- [x] `new_user_space()` for a single application
 
 #### Tasks(User) Related
 
@@ -65,57 +65,57 @@ Some structs and methods
 Then virtual memory on...
 
 - [x] A common `linker.ld` for all apps with base address set to `0x10000`.(align settings for R-W-X)
-- [ ] A `elf` app analyzer to initialize a new user space
+- [x] A `elf` app analyzer to initialize a new user space
  - User's kernel stack
  - User's user stack
  - User's `TrapContext`
  - User's `Trampoline`
  - ~~User does not have heap at the moment...~~
-- [ ] For each section in `elf` file, map the virtual address to physical address (also create new frames and **copy data** into it)
+- [x] For each section in `elf` file, map the virtual address to physical address (also create new frames and **copy data** into it)
 
 **TaskContext**
 Some context for switch back to an app's kernel stack.
 
-- [ ] fields including
+- [x] fields including
  - `sp` for kernel stack
  - ~~`ra` for `__restore_ctx`~~ That's wrong!
  - `__switch` does not go back to `__store_ctx`, instead, it goes to the return address of the *current running kernel function* like `run_next_task()`...
  - callee saved registers : cause `__switch` is a `naked` function
-- [ ] `switch` function
+- [x] `switch` function
 
 
 **TrapContext**
 
-- [ ] Context fields : `sscratch` here is to store the `TrapContext` pointer.
+- [x] Context fields : `sscratch` here is to store the `TrapContext` pointer.
  - For trap into the right kernel space : `kernel_satp`, `kernel_sp`, `trap_handler`
  - For back to user space : all registers (`sp` is `x2`), `sstatus`, `sepc`
  - we can know user's `satp` in kernel space (memory_set in kernel space...)
 
-- [ ] `__ctx_save` : save context in user space
-- [ ] `__ctx_restore` : jump to user space at first then restore context
-- [ ] build the `trampline` page
-- [ ] `trap_handler` : dispatch traps
+- [x] `__ctx_save` : save context in user space
+- [x] `__ctx_restore` : jump to user space at first then restore context
+- [x] build the `trampline` page
+- [x] `trap_handler` : dispatch traps
  - jump to it from `__ctx_save`
  - it jumps to `__ctx_restore` after handling the trap
 
 **syscall**
 
 - [ ] `yield`
-- [ ] `exit`
-- [ ] `write`
+- [x] `exit`
+- [x] `write`
 
 **Taks manager, may become process in later chapter 5**
 
-- [ ] `TaskInfo` : a struct to record a task's information.
-- [ ] `TaskManager` and its methods.
+- [x] `TaskInfo` : a struct to record a task's information.
+- [x] `TaskManager` and its methods.
 
 **Trap related topic is a little bit complicated compared to no-address-space case**
 
 A set of procedures for handling a system call
 
-- [ ] `TrapContex` : save U-mode context
-- [ ] `TaskContex` : save S-mode context for switching
-- [ ] `__switch`
+- [x] `TrapContex` : save U-mode context
+- [x] `TaskContex` : save S-mode context for switching
+- [x] `__switch`
 
 **Interrupt is a hard topic without support of `rustsbi_qemu`**
 
