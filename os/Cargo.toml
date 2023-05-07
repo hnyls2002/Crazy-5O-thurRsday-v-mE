@@ -12,6 +12,12 @@ lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
 xmas-elf = "0.7.0"
 
 [features] 
+default = ["larger_memory"]
+
+# for larger memory to load app's elf file with debug symbols
+larger_memory = []
+
+# for loggers
 NoneLog = []
 Error = []
 Warn = ["Error"]

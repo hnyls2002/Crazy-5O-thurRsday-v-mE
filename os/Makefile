@@ -1,6 +1,3 @@
-# Logger level: Trace, Debug, Info, Warn, Error
-LOG ?= Trace
-
 # Utils
 OBJDUMP := rust-objdump --arch-name=riscv64
 OBJCOPY := rust-objcopy --binary-architecture=riscv64
@@ -21,6 +18,9 @@ KERNEL_ENTRY_PA := 0x80000000
 #Disassembly
 DISASM ?= -d -S
 DISASM_TMP := target/$(TARGET)/$(MODE)/asm
+
+# Logger level: Trace, Debug, Info, Warn, Error
+LOG ?= Trace
 
 clean:
 	@cargo clean

@@ -26,7 +26,9 @@ use core::arch::{asm, global_asm};
 use riscv::register::{mepc, mstatus, mtvec, satp, utvec::TrapMode};
 
 use crate::{
-    config::BOOT_STACK_SIZE, kfc_sbi::sbi_shutdown, task::task_manager::run_first_task,
+    config::{BOOT_STACK_SIZE, MEMORY_END},
+    kfc_sbi::sbi_shutdown,
+    task::task_manager::run_first_task,
     trap::machine_trap_panic,
 };
 
@@ -107,9 +109,9 @@ pub fn kernel_main() -> ! {
 }
 
 pub fn kernel_init() {
-    info!("Entering into kernel_main function!");
-    info!("UART print test passed!");
     println!("\x1b[34m{}\x1b[0m", kfc_sbi::LOGO);
+    info!("Entering into kernel_main function!");
+    info!("MEMORY END ADDRESS is {:#X}", MEMORY_END);
     mm::mm_init();
     trap::trap_init();
     task::task_init();
