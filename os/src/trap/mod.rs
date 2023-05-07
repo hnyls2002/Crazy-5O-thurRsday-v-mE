@@ -1,6 +1,6 @@
 pub mod trap_context;
 
-use crate::config::TRAP_CTX_VIRT_ADDR;
+use crate::{config::TRAP_CTX_VIRT_ADDR, task::task_manager::exit_cur_run_next};
 use core::arch::{asm, global_asm};
 
 use riscv::register::{scause, stval, stvec};
@@ -43,7 +43,8 @@ pub fn trap_handler() -> ! {
                 }
                 _ => {
                     info!("The exception \x1b[31m[{:?}]\x1b[34m happen at address : {:#X}, s_val : {:#X}", e,trap_ctx.s_epc, s_tval);
-                    trap_ctx.s_epc += 4;
+                    exit_cur_run_next();
+                    // trap_ctx.s_epc += 4;
                 }
             }
         }

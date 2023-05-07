@@ -9,6 +9,7 @@
 // for outside use
 
 use alloc::vec::Vec;
+use riscv::register::sstatus;
 
 use crate::{
     app_loader::get_app_num,
@@ -161,6 +162,8 @@ pub fn translate_cur_byte_buffer(buf: usize, len: usize) -> Option<Vec<&'static 
 pub fn run_first_task() {
     TASK_MANAGER.mark_task_status(0, TaskStatus::Running);
     let unused = TaskContext::empty();
+    // enable s-mode interrupt here
+    unsafe { sstatus::set_sie() };
     __switch(&unused as *const _ as *mut _, TASK_MANAGER.task_ctx_ptr(0))
 }
 
