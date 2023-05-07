@@ -23,12 +23,12 @@ extern crate alloc;
 
 use core::arch::{asm, global_asm};
 
-use riscv::register::{mepc, mstatus, mtvec, satp, utvec::TrapMode};
+use riscv::register::{mepc, mstatus, satp};
 
 use crate::{
     config::{BOOT_STACK_SIZE, MEMORY_END},
+    kfc_sbi::timer,
     task::task_manager::run_first_task,
-    trap::machine_trap_panic,
 };
 
 #[naked]
@@ -91,9 +91,7 @@ pub fn machine_start() -> ! {
         asm!("csrw pmpaddr0, {}", in(reg) 0x3fffffffffffff as usize);
         asm!("csrw pmpcfg0, {}", in(reg) 0xf);
 
-        // TODO : for temporary test
-        // here should be timer_init
-        mtvec::write(machine_trap_panic as usize, TrapMode::Direct);
+        timer::timer_init();
 
         asm!("mret");
     }

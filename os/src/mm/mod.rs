@@ -16,15 +16,24 @@ pub use memory_set::MemorySet;
 pub use page::{Frame, Page, VPRange};
 pub use page_table::{PTEFlags, PageTable, PTE};
 
+use crate::kfc_sbi::timer;
+
 use self::{
     kernel_space::{activate_kernel_space, kernel_space_init},
     mm_test::remap_test,
 };
 
+#[no_mangle]
 pub fn mm_init() {
     // buddy allocator
     heap_init();
     heap_test();
+
+    for _i in 0..1000000000 {
+        debug!("now time is {}", timer::get_time());
+        // debug!(" i = {}", _i);
+        debug!("trigger : {}", timer::get_time_cmp());
+    }
 
     // physical frame allocator
     frame_allocator_init();

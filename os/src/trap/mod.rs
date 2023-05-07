@@ -48,7 +48,9 @@ pub fn trap_handler() -> ! {
             }
         }
         scause::Trap::Interrupt(i) => match i {
-            scause::Interrupt::SupervisorTimer => todo!(),
+            scause::Interrupt::SupervisorTimer => {
+                panic!("FUCK");
+            }
             _ => panic!("{:?} is not supported!", i),
         },
     };
