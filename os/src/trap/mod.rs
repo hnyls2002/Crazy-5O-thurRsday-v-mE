@@ -24,6 +24,7 @@ pub fn trampoline_frame() -> Frame {
 pub fn trap_handler() -> ! {
     // when in S-mode, disable the exception
     // the interrupt has been disabled by hardware (sstatus.sie = 0)
+    debug!("into trap handler!");
     unsafe { stvec::write(kernel_trap as usize, stvec::TrapMode::Direct) };
     let trap_ctx = get_cur_trap_ctx_mut();
     let s_cause = scause::read();
@@ -84,4 +85,8 @@ pub fn machine_trap_panic() {
         asm!(".align 2");
     }
     panic!("M-mode trap handler not implemented!");
+}
+
+pub fn trap_init() {
+    unsafe { stvec::write(TRAMPOLINE_VIRT_ADDR.0, stvec::TrapMode::Direct) };
 }

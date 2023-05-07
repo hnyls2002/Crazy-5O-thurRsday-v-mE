@@ -86,14 +86,13 @@ pub fn machine_start() -> ! {
         // set sie to enable all interrupt
         asm!("csrw sie, {}", in(reg) 0x222);
 
-        // TODO : for temporary test
-        mtvec::write(machine_trap_panic as usize, TrapMode::Direct);
-
         // physical memory protection
         asm!("csrw pmpaddr0, {}", in(reg) 0x3fffffffffffff as usize);
         asm!("csrw pmpcfg0, {}", in(reg) 0xf);
 
-        // TODO : some other boot settings...
+        // TODO : for temporary test
+        // here should be timer_init
+        mtvec::write(machine_trap_panic as usize, TrapMode::Direct);
 
         asm!("mret");
     }
@@ -102,18 +101,16 @@ pub fn machine_start() -> ! {
 
 #[no_mangle]
 pub fn kernel_main() -> ! {
-    info!("Entering into kernel_main function!");
-    info!("UART print test passed!");
-    println!("\x1b[34m{}\x1b[0m", kfc_sbi::LOGO);
-
     kernel_init();
-
     run_first_task();
-
     sbi_shutdown(0);
 }
 
 pub fn kernel_init() {
-    mm::init();
-    task::init();
+    info!("Entering into kernel_main function!");
+    info!("UART print test passed!");
+    println!("\x1b[34m{}\x1b[0m", kfc_sbi::LOGO);
+    mm::mm_init();
+    trap::trap_init();
+    task::task_init();
 }

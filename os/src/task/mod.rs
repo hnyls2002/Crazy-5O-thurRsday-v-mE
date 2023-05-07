@@ -5,6 +5,6 @@ pub mod task_context;
 pub mod task_info;
 pub mod task_manager;
 
-pub fn init() {
+pub fn task_init() {
     init_all_apps();
 }

@@ -21,7 +21,7 @@ use self::{
     mm_test::remap_test,
 };
 
-pub fn init() {
+pub fn mm_init() {
     // buddy allocator
     heap_init();
     heap_test();
@@ -29,7 +29,7 @@ pub fn init() {
     // physical frame allocator
     frame_allocator_init();
 
-    // kernel memory spacek
+    // kernel memory space
     kernel_space_init();
     remap_test();
     activate_kernel_space();
