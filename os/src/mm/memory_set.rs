@@ -40,7 +40,7 @@ impl MemorySet {
         // trace!("insert new map area : {:#X?}", map_area);
         for it in vp_range.iter() {
             let vp = it.value();
-            let pp = map_area.get_framed(vp);
+            let pp = map_area.mapped_to(vp);
             // trace!("vp={:#X?}, pp={:#X?}", vp, pp);
             let res = self.page_table.map_one(vp, pp, pte_flags);
             assert!(res.is_ok(), "virtual page mapping to physical page failed");
@@ -95,7 +95,7 @@ impl MemorySet {
             // If this header is a loadable segment, map it into memory.
             if ph.get_type().unwrap() == xmas_elf::program::Type::Load {
                 let start_va = VirtAddr(ph.virtual_addr() as usize);
-                let end_va = VirtAddr(ph.virtual_addr() as usize + ph.mem_size() as usize);
+                let end_va = start_va.step_offset(ph.mem_size() as usize);
                 max_end_va = max(max_end_va, end_va);
 
                 // map it with U permission and R/W/X according to the flags
@@ -114,7 +114,7 @@ impl MemorySet {
                 // build a map_area and bound frames
                 let fill_data = FillData::new(
                     start_va,
-                    VirtAddr(start_va.0 + ph.file_size() as usize),
+                    start_va.step_offset(ph.file_size() as usize),
                     &elf.input[ph.offset() as usize..(ph.offset() + ph.file_size()) as usize],
                 );
 
@@ -132,7 +132,7 @@ impl MemorySet {
 
         // build the user stack : next_page() actually build a guard page...
         let user_stack_bottom = max_end_va.ceil_page().next_page().start_address();
-        let user_stack_top = VirtAddr(user_stack_bottom.0 + USER_STACK_SIZE);
+        let user_stack_top = user_stack_bottom.step_offset(USER_STACK_SIZE);
         let user_stack = MapArea::new(
             VPRange::new(user_stack_bottom, user_stack_top),
             MapType::Framed(BTreeMap::new()),

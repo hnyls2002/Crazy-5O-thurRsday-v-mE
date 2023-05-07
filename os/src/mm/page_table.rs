@@ -4,7 +4,7 @@ use riscv::addr::BitField;
 
 use crate::config::{PAGE_BYTES_BITS, PTE_FLAGS_MASK, PTE_PPN_RANGE};
 
-use super::{frame_alloc, Frame, FrameTracker, Page};
+use super::{frame_alloc, Frame, FrameTracker, Page, PhysAddr, VirtAddr};
 
 bitflags! {
     pub struct PTEFlags : usize{
@@ -144,6 +144,7 @@ impl PageTable {
         }
     }
 
+    #[allow(dead_code)]
     pub fn unmap_one(&mut self, vp: Page) -> Result<(), ()> {
         let pte = self.find_pte_mut(vp).unwrap();
         if pte.is_valid() {
@@ -155,12 +156,11 @@ impl PageTable {
     }
 
     pub fn translate_vp(&self, vp: Page) -> Option<Frame> {
-        self.find_pte(vp).map_or(None, |pte| {
-            if pte.is_valid() {
-                Some(pte.get_frame())
-            } else {
-                None
-            }
-        })
+        let pte = self.find_pte(vp)?;
+        if pte.is_valid() {
+            Some(pte.get_frame())
+        } else {
+            None
+        }
     }
 }

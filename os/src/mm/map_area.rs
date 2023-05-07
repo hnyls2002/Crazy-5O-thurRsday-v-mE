@@ -88,19 +88,22 @@ impl MapArea {
     fn fill_with_data(&mut self, fill_data: FillData) {
         let mut cur_va = fill_data.fill_va_range.start;
         let mut cur_offset = 0 as usize;
-        // debug!("fill_data : {:#X?}", fill_data.fill_va_range);
+
         while cur_va < fill_data.fill_va_range.end {
-            let cur_va_end = fill_data.get_fill_addr_end(cur_va);
-            let cur_offset_end = cur_offset + (cur_va_end.0 - cur_va.0);
-            // debug!("cur_offset={:#X?}", cur_offset);
-            // debug!("cur_offset_end={:#X?}", cur_offset_end);
-            let src = &fill_data.data[cur_offset..cur_offset_end];
-            let dst = &mut self.get_framed(cur_va.floor_page()).get_bytes_array_mut()
-                [cur_va.offset()..cur_va_end.offset()];
+            // get the current slice len in this page
+            let cur_slice_len = min(
+                cur_va.floor_page().next_page().0,
+                fill_data.fill_va_range.end.0,
+            ) - cur_va.0;
+
+            let src = &fill_data.data[cur_offset..cur_offset + cur_slice_len];
+            let dst = &mut self.mapped_to(cur_va.floor_page()).get_bytes_array_mut()
+                [cur_va.get_offset()..cur_va.get_offset() + cur_slice_len];
+
             dst.copy_from_slice(src);
 
-            cur_va = cur_va_end;
-            cur_offset = cur_offset_end;
+            cur_va.0 += cur_slice_len;
+            cur_offset += cur_slice_len;
         }
     }
 }
@@ -138,7 +141,7 @@ impl MapArea {
     /// ### get the physical frame of a virtual page
     /// 1. if map_type is identical, then vp == pp
     /// 2. if map_type is framed, then vp is the key of `mem_frames` : we assume that this pp has been allocated before
-    pub fn get_framed(&self, vp: Page) -> Frame {
+    pub fn mapped_to(&self, vp: Page) -> Frame {
         match self.map_type {
             MapType::Identical => vp.into(),
             MapType::Framed(ref mem_frames) => mem_frames.get(&vp).expect("frame not found").0,
@@ -158,10 +161,5 @@ impl<'a> FillData<'a> {
             fill_va_range: VARange::new(start_va, end_va),
             data,
         }
-    }
-    pub fn get_fill_addr_end(&self, cur_va: VirtAddr) -> VirtAddr {
-        let mut ret = cur_va.floor_page().next_page().start_address();
-        ret.0 = min(ret.0, self.fill_va_range.end.0);
-        ret
     }
 }

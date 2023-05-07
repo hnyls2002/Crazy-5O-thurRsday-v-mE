@@ -25,8 +25,11 @@ impl VirtAddr {
     pub fn ceil_page(&self) -> Page {
         Page(align_up(self.0, PAGE_BYTES))
     }
-    pub fn offset(&self) -> usize {
+    pub fn get_offset(&self) -> usize {
         self.0 & (PAGE_BYTES - 1)
+    }
+    pub fn step_offset(&self, offset: usize) -> Self {
+        Self(self.0 + offset)
     }
 }
 
@@ -36,6 +39,12 @@ impl PhysAddr {
     }
     pub fn ceil_frame(&self) -> Frame {
         Frame(align_up(self.0, PAGE_BYTES))
+    }
+    pub fn get_offset(&self) -> usize {
+        self.0 & (PAGE_BYTES - 1)
+    }
+    pub fn step_offset(&self, offset: usize) -> Self {
+        Self(self.0 + offset)
     }
 }
 
