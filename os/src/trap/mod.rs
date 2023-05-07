@@ -24,7 +24,6 @@ pub fn trampoline_frame() -> Frame {
 pub fn trap_handler() -> ! {
     // when in S-mode, disable the exception
     // the interrupt has been disabled by hardware (sstatus.sie = 0)
-    debug!("into trap handler!");
     unsafe { stvec::write(kernel_trap as usize, stvec::TrapMode::Direct) };
     let trap_ctx = get_cur_trap_ctx_mut();
     let s_cause = scause::read();
@@ -33,6 +32,8 @@ pub fn trap_handler() -> ! {
         scause::Trap::Exception(e) => match e {
             scause::Exception::UserEnvCall => {
                 // ecall is four bytes length
+                // error!("[trap_handler] sepc : {:X}", trap_ctx.s_epc);
+                // error!("[trap_handler] sp : {:X}", trap_ctx.x[2]);
                 trap_ctx.s_epc += 4;
                 trap_ctx.x[10] = syscall_dispathcer(
                     trap_ctx.x[17],
@@ -65,6 +66,8 @@ pub fn trap_return() -> ! {
         TRAMPOLINE_VIRT_ADDR.0 + __restore_trap_ctx as usize - __save_trap_ctx as usize;
     let user_satp: usize = get_cur_token();
     unsafe {
+        // when jump back to user space, set stvec to trampoline again
+        stvec::write(TRAMPOLINE_VIRT_ADDR.0, stvec::TrapMode::Direct);
         asm!("jr {addr}", 
             addr = in(reg) restore_va,
             in("a0") user_satp,
