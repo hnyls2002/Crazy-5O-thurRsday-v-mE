@@ -16,11 +16,11 @@ const CLINT_MTIME: usize = CLINT + 0xBFF8;
 static mut TIMER_SCRATCH: [usize; 5] = [0; 5];
 
 pub fn get_time() -> usize {
-    unsafe { *(CLINT_MTIME as *const usize) }
+    unsafe { (CLINT_MTIME as *const usize).read_volatile() }
 }
 
 pub fn get_time_cmp() -> usize {
-    unsafe { *(CLINT_MTIMECMP as *const usize) }
+    unsafe { (CLINT_MTIMECMP as *const usize).read_volatile() }
 }
 
 pub fn timer_init() {
