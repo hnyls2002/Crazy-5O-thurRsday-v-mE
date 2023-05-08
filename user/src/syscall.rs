@@ -3,6 +3,7 @@ use core::arch::asm;
 const SYSCALL_WRITE: usize = 64;
 const SYSCALL_EXIT: usize = 93;
 const SYSCALL_YIELD: usize = 124;
+const SYSCALL_TIMES: usize = 153;
 
 // syscall return type is isize
 #[inline(never)]
@@ -30,4 +31,8 @@ pub fn sys_exit(exit_code: i32) -> isize {
 
 pub fn sys_yield() -> isize {
     syscall(SYSCALL_YIELD, [0, 0, 0])
+}
+
+pub fn sys_times() -> isize {
+    syscall(SYSCALL_TIMES, [0, 0, 0])
 }

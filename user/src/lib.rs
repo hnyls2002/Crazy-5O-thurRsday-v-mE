@@ -8,7 +8,7 @@ pub mod console;
 mod kfc_logger;
 
 mod lang_items;
-mod syscall;
+pub mod syscall;
 
 pub use syscall::{sys_exit, sys_write};
 

@@ -3,8 +3,8 @@ use core::arch::asm;
 use riscv::register::{mie, mscratch, mstatus, mtvec};
 
 // clock configuration
-const CLOCK_FREQ: usize = 1250_0000;
-const MSEC_PER_SEC: usize = 1000;
+pub const CLOCK_FREQ: usize = 1250_0000;
+pub const MSEC_PER_SEC: usize = 1000;
 const TICKS_PER_SEC: usize = 100; // 10ms per tick
 const INTERVAL: usize = CLOCK_FREQ / TICKS_PER_SEC;
 
