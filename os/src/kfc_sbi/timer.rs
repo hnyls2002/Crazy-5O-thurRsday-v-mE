@@ -9,7 +9,7 @@ const TICKS_PER_SEC: usize = 100; // 10ms per tick
 const INTERVAL: usize = CLOCK_FREQ / TICKS_PER_SEC;
 
 // clint : core local interruptor
-const CLINT: usize = 0x2000000;
+const CLINT: usize = 0x200_0000;
 const CLINT_MTIMECMP: usize = CLINT + 0x4000;
 const CLINT_MTIME: usize = CLINT + 0xBFF8;
 
@@ -59,7 +59,7 @@ pub extern "C" fn mtimer() {
         sd a1, 0(a0) # a1 = next trigger
 
         # delegate a supervisor-timer-interrupt
-        li a0, {mip_stip}
+        li a0, {mip_ssip}
         csrrs zero, mip, a0
 
         # restore
@@ -72,7 +72,7 @@ pub extern "C" fn mtimer() {
         "#, 
         mtimecmp = const CLINT_MTIMECMP,
         interval = const INTERVAL,
-        mip_stip = const (1<<5),
+        mip_ssip = const 2,
         options(noreturn))
     }
 }

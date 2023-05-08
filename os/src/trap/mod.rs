@@ -1,6 +1,9 @@
 pub mod trap_context;
 
-use crate::{config::TRAP_CTX_VIRT_ADDR, task::task_manager::exit_cur_run_next};
+use crate::{
+    config::TRAP_CTX_VIRT_ADDR,
+    task::task_manager::{exit_cur_run_next, suspend_cur_run_next},
+};
 use core::arch::{asm, global_asm};
 
 use riscv::register::{scause, stval, stvec};
@@ -49,8 +52,9 @@ pub fn trap_handler() -> ! {
             }
         }
         scause::Trap::Interrupt(i) => match i {
-            scause::Interrupt::SupervisorTimer => {
-                panic!("FUCK");
+            scause::Interrupt::SupervisorSoft => {
+                unsafe { asm!("csrw sip, {ssip}", ssip = in(reg) !2) };
+                suspend_cur_run_next();
             }
             _ => panic!("{:?} is not supported!", i),
         },
@@ -82,7 +86,13 @@ pub fn kernel_trap() {
     unsafe {
         asm!(".align 2");
     }
-    panic!("Trap when in S-mode!");
+    let s_cause = scause::read();
+    let s_val = stval::read();
+    panic!(
+        "Trap when in S-mode! [{:?}] , at address : {:#X}",
+        s_cause.cause(),
+        s_val
+    );
 }
 
 pub fn machine_trap_panic() {

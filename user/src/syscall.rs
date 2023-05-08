@@ -5,6 +5,8 @@ const SYSCALL_EXIT: usize = 93;
 const SYSCALL_YIELD: usize = 124;
 
 // syscall return type is isize
+#[inline(never)]
+#[no_mangle]
 fn syscall(id: usize, args: [usize; 3]) -> isize {
     let mut ret: isize;
     unsafe {

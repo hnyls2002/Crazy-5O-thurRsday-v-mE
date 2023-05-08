@@ -23,12 +23,13 @@ extern crate alloc;
 
 use core::arch::{asm, global_asm};
 
-use riscv::register::{mepc, mstatus, satp};
+use riscv::register::{mepc, mstatus, satp, stvec};
 
 use crate::{
     config::{BOOT_STACK_SIZE, MEMORY_END},
     kfc_sbi::timer,
     task::task_manager::run_first_task,
+    trap::kernel_trap,
 };
 
 #[naked]
@@ -91,6 +92,10 @@ pub fn machine_start() -> ! {
         asm!("csrw pmpaddr0, {}", in(reg) 0x3fffffffffffff as usize);
         asm!("csrw pmpcfg0, {}", in(reg) 0xf);
 
+        // temporarily set stvec to kernel_trap
+        stvec::write(kernel_trap as usize, stvec::TrapMode::Direct);
+
+        // timer interrupt init
         timer::timer_init();
 
         asm!("mret");
@@ -114,4 +119,8 @@ pub fn kernel_init() {
     mm::mm_init();
     trap::trap_init();
     task::task_init();
+    // TODO : kernel trap should be implemented !!!
+    // debug!("test read CLINT : {:#X?}", unsafe {
+    //     *(0x3000_bff8 as *const usize)
+    // });
 }

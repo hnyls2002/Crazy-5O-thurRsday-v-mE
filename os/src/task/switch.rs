@@ -3,6 +3,7 @@ use core::arch::asm;
 use super::task_context::TaskContext;
 
 #[naked]
+#[no_mangle]
 pub extern "C" fn __switch(ctx1: *mut TaskContext, ctx2: *const TaskContext) {
     unsafe {
         asm!(

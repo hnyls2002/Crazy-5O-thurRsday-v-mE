@@ -177,3 +177,15 @@ pub fn exit_cur_run_next() {
         sbi_shutdown(0);
     }
 }
+
+pub fn suspend_cur_run_next() {
+    info!("suspend cur run next");
+    if let Some(next_id) = TASK_MANAGER.find_next_ready() {
+        let cur_id = TASK_MANAGER.cur_id();
+        TASK_MANAGER.mark_task_status(cur_id, TaskStatus::Ready);
+        TASK_MANAGER.mark_task_status(next_id, TaskStatus::Running);
+        let cur_task_ctx_ptr = TASK_MANAGER.task_ctx_ptr(cur_id);
+        let next_task_ctx_ptr = TASK_MANAGER.task_ctx_ptr(next_id);
+        __switch(cur_task_ctx_ptr, next_task_ctx_ptr);
+    }
+}
