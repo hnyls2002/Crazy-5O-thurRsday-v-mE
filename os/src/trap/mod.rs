@@ -1,3 +1,4 @@
+pub mod kernel_trap;
 pub mod trap_context;
 
 use crate::{
@@ -15,6 +16,8 @@ use crate::{
     task::task_manager::{get_cur_token, get_cur_trap_ctx_mut},
 };
 
+use self::kernel_trap::kernelvec;
+
 global_asm!(include_str!("trampoline.S"));
 
 pub fn trampoline_frame() -> Frame {
@@ -27,7 +30,7 @@ pub fn trampoline_frame() -> Frame {
 pub fn trap_handler() -> ! {
     // when in S-mode, disable the exception
     // the interrupt has been disabled by hardware (sstatus.sie = 0)
-    unsafe { stvec::write(kernel_trap as usize, stvec::TrapMode::Direct) };
+    unsafe { stvec::write(kernelvec as usize, stvec::TrapMode::Direct) };
     let trap_ctx = get_cur_trap_ctx_mut();
     let s_cause = scause::read();
     let s_tval = stval::read();
@@ -80,28 +83,4 @@ pub fn trap_return() -> ! {
             in("a1") TRAP_CTX_VIRT_ADDR.0,
             options(noreturn));
     }
-}
-
-pub fn kernel_trap() {
-    unsafe {
-        asm!(".align 2");
-    }
-    let s_cause = scause::read();
-    let s_val = stval::read();
-    panic!(
-        "Trap when in S-mode! [{:?}] , at address : {:#X}",
-        s_cause.cause(),
-        s_val
-    );
-}
-
-pub fn machine_trap_panic() {
-    unsafe {
-        asm!(".align 2");
-    }
-    panic!("M-mode trap handler not implemented!");
-}
-
-pub fn trap_init() {
-    unsafe { stvec::write(TRAMPOLINE_VIRT_ADDR.0, stvec::TrapMode::Direct) };
 }

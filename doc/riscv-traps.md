@@ -81,10 +81,18 @@ Some settings :
   - set `mstatus.mie` and `mie.mtie` to enable MTI in M-mode
 - Enable Supervisor Timer Interrupt (only when current mode is U-mode)
   - `mideleg` set befor.
-  - `sie.stie` set before.
+  - ~~`sie.stie`~~ `sie.ssie` set before.
+  - ~~`sip.stip`~~,`sip.ssip` set by `mtimer`, cleared by `trap_handler()`
   - `sstatus.sie` not set, that why STI can not happen when in S-mode.
 
-Further Possible Implementation :
 
-- When in S-mode, we can set `sstatus.sie` to allow interrupt in S-mode (`__save_ctx` has been done), but another `stvec = kerneltrap` is needed to handle the interrupt.
+Trap when in S-mode :
+
+- Set `stvec = kernelvec` when booting.
+- When `trap_return()`, set `stvec = trampoline`, for U-mode trap. (This is how we first enter User-mode)
+- When into `trap_handler()`, set `stvec = kernelvec` again, for S-mode trap.
+
+Interrupt when in S-mode :
+
+- When in S-mode, we can set `sstatus.sie` to allow interrupt in S-mode (`__save_ctx` has been done), but another `stvec = kernelvec` is needed to handle the interrupt.
 - When `trap_return()`, clear `sstatus.sie` to disable interrupt in S-mode, for preventing interrupt when `__restore_ctx`.

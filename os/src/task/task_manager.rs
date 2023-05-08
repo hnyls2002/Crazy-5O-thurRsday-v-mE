@@ -179,7 +179,7 @@ pub fn exit_cur_run_next() {
 }
 
 pub fn suspend_cur_run_next() {
-    info!("suspend cur run next");
+    info!("suspend current task and run next");
     if let Some(next_id) = TASK_MANAGER.find_next_ready() {
         let cur_id = TASK_MANAGER.cur_id();
         TASK_MANAGER.mark_task_status(cur_id, TaskStatus::Ready);

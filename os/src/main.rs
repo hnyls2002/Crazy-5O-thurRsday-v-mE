@@ -29,7 +29,7 @@ use crate::{
     config::{BOOT_STACK_SIZE, MEMORY_END},
     kfc_sbi::timer,
     task::task_manager::run_first_task,
-    trap::kernel_trap,
+    trap::kernel_trap::kernelvec,
 };
 
 #[naked]
@@ -92,8 +92,8 @@ pub fn machine_start() -> ! {
         asm!("csrw pmpaddr0, {}", in(reg) 0x3fffffffffffff as usize);
         asm!("csrw pmpcfg0, {}", in(reg) 0xf);
 
-        // temporarily set stvec to kernel_trap
-        stvec::write(kernel_trap as usize, stvec::TrapMode::Direct);
+        // when in kernel
+        stvec::write(kernelvec as usize, stvec::TrapMode::Direct);
 
         // timer interrupt init
         timer::timer_init();
@@ -117,9 +117,8 @@ pub fn kernel_init() {
     info!("Entering into kernel_main function!");
     info!("MEMORY END ADDRESS is {:#X}", MEMORY_END);
     mm::mm_init();
-    trap::trap_init();
     task::task_init();
-    // TODO : kernel trap should be implemented !!!
+    // test for kernel trap
     // debug!("test read CLINT : {:#X?}", unsafe {
     //     *(0x3000_bff8 as *const usize)
     // });
