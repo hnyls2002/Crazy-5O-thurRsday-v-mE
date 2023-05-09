@@ -117,12 +117,8 @@ A set of procedures for handling a system call
 - [x] `TaskContex` : save S-mode context for switching
 - [x] `__switch`
 
-**Interrupt is a hard topic without support of `rustsbi_qemu`**
+**Interrupt Support**
 
-- [ ] `__mtimer_handler` : no `C` code, as the xv6 tutorial said.
-  So in our project, it is : no `rust` code.
-- [ ] timer interrupt delegated to S-mode
- - `__mtimer_interrupt` is still needed, which first handle the interrupt, then delegate it to S-mode as a *software timer interrupt*
-- [ ] interrupt happening when in S-mode
-  - rCore just panic before chapter 9
-  - xv6 write a `kerneltrap` function to handle it
+- [x] `kernelvec` : `stvec` for current mode is S-mode.
+- [x] `kernel_trap_handler` : to handle trap when in S-mode.
+- [x] `mtimer` : set next trigger and delegate to a *Supervisor Software Interrupt*.
