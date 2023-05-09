@@ -63,9 +63,11 @@ impl TaskManagerInner {
     }
 
     pub fn find_next_ready(&self) -> Option<usize> {
+        let start_id = self.cur_task.map_or(0, |cur_id| cur_id + 1);
         for i in 0..self.task_num {
-            if self.task_infos[i].status == TaskStatus::Ready {
-                return Some(i);
+            let possible_next = (start_id + i) % self.task_num;
+            if self.task_infos[possible_next].status == TaskStatus::Ready {
+                return Some(possible_next);
             }
         }
         None
