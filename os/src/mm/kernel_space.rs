@@ -152,3 +152,7 @@ pub fn add_kernel_stack(stack: MapArea) {
         .exclusive_access()
         .insert_new_map_area(stack);
 }
+
+pub fn remove_map_area(vp_range: &VPRange) {
+    KERNEL_SPACE.inner.exclusive_access().relase_area(&vp_range);
+}

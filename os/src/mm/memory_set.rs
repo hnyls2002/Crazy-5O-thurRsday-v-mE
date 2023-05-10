@@ -49,10 +49,26 @@ impl MemorySet {
         self.map_areas.push(map_area);
     }
 
-    #[allow(unused)]
     /// release the relations in **page_table**
     pub fn relase_area(&mut self, vp_range: &VPRange) {
-        todo!()
+        let index = self
+            .map_areas
+            .iter()
+            .position(|ma| ma.vp_range == *vp_range)
+            .expect("no such map area fitting the vp_range");
+
+        // move the value out
+        let map_area = self.map_areas.remove(index);
+
+        // release the relations in page_table
+        for it in map_area.vp_range.iter() {
+            let vp = it.value();
+            if let Err(_) = self.page_table.unmap_one(vp) {
+                panic!("unmap a page failed")
+            }
+        }
+
+        // the map_area will be dropped here
     }
 }
 

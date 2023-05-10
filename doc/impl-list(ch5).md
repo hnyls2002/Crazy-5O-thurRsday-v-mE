@@ -1,15 +1,15 @@
 #### Input Support
-- [ ] UART input : single char, one by one.
+- [x] UART input : single char, one by one.
 If no char incoming, wait for it or `yield` to other tasks.
 
 #### ELF Loader Support
-- [ ] `build.rs` : embed name of each app into the kernel
-- [ ] `elf-loader` : load elf file by name
+- [x] `build.rs` : embed name of each app into the kernel
+- [x] `elf-loader` : load elf file by name
 
 #### Process Structures
 
-- [ ] PID allocator : RAII
-- [ ] Kernel stack allocator : RAII
+- [x] PID allocator : RAII
+- [x] Kernel stack allocator : RAII
 - [ ] `TaskStruct`
 - pid
 - kernel stack resource

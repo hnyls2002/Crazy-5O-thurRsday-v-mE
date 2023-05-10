@@ -144,7 +144,6 @@ impl PageTable {
         }
     }
 
-    #[allow(dead_code)]
     pub fn unmap_one(&mut self, vp: Page) -> Result<(), ()> {
         let pte = self.find_pte_mut(vp).unwrap();
         if pte.is_valid() {
