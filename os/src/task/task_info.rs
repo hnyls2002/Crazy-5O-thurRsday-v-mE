@@ -32,7 +32,8 @@ impl TaskInfo {
     pub fn new_init(task_id: usize) -> Self {
         // build memory set
         let elf_data = load_app(task_id);
-        let (user_space, entry_addr, user_sp) = MemorySet::new_from_elf(elf_data);
+        let (user_space, entry_addr, user_sp) =
+            MemorySet::new_from_elf(elf_data.expect("failed to load app"));
 
         // build the kernel stack
         let kt_range = kernel_stack_range(task_id);
