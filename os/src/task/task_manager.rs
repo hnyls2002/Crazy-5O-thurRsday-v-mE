@@ -15,13 +15,13 @@ use crate::{
     kfc_sbi::sbi_shutdown,
     kfc_util::up_safe_cell::UPSafeCell,
     mm::{Frame, Page, VirtAddr},
-    task::{switch::__switch, task_context::TaskContext, task_info::TaskStatus},
+    task::{switch::__switch, task_context::TaskContext, task_struct::TaskStatus},
     trap::trap_context::TrapContext,
 };
 use core::cmp::min;
 use lazy_static::lazy_static;
 
-use super::task_info::TaskInfo;
+use super::task_struct::TaskStruct;
 
 lazy_static! {
     static ref TASK_MANAGER: TaskManager = TaskManager {
@@ -43,7 +43,7 @@ pub struct TaskManager {
 
 pub struct TaskManagerInner {
     pub task_num: usize,
-    pub task_infos: Vec<TaskInfo>,
+    pub task_structs: Vec<TaskStruct>,
     pub cur_task: Option<usize>,
 }
 
@@ -51,14 +51,14 @@ impl TaskManagerInner {
     pub fn new_bare() -> Self {
         TaskManagerInner {
             task_num: 0,
-            task_infos: Vec::new(),
+            task_structs: Vec::new(),
             cur_task: None,
         }
     }
     pub fn init_all_apps(&mut self) {
         self.task_num = get_app_num();
         for i in 0..self.task_num {
-            self.task_infos.push(TaskInfo::new_init(i));
+            self.task_structs.push(TaskStruct::new_init(i));
         }
     }
 
@@ -66,7 +66,7 @@ impl TaskManagerInner {
         let start_id = self.cur_task.map_or(0, |cur_id| cur_id + 1);
         for i in 0..self.task_num {
             let possible_next = (start_id + i) % self.task_num;
-            if self.task_infos[possible_next].status == TaskStatus::Ready {
+            if self.task_structs[possible_next].status == TaskStatus::Ready {
                 return Some(possible_next);
             }
         }
@@ -74,7 +74,7 @@ impl TaskManagerInner {
     }
 
     pub fn mark_task_status(&mut self, id: usize, status: TaskStatus) {
-        self.task_infos[id].status = status;
+        self.task_structs[id].status = status;
         if status == TaskStatus::Running {
             self.cur_task = Some(id);
         } else {
@@ -96,23 +96,23 @@ impl TaskManager {
     }
 
     pub fn get_token(&self, id: usize) -> usize {
-        self.inner.exclusive_access().task_infos[id]
+        self.inner.exclusive_access().task_structs[id]
             .addr_space
             .get_satp_token()
     }
 
     pub fn task_ctx_ptr(&self, id: usize) -> *mut TaskContext {
-        &self.inner.exclusive_access().task_infos[id].task_ctx as *const _ as *mut _
+        &self.inner.exclusive_access().task_structs[id].task_ctx as *const _ as *mut _
     }
 
     pub fn trap_ctx_mut(&self, id: usize) -> &'static mut TrapContext {
-        self.inner.exclusive_access().task_infos[id]
+        self.inner.exclusive_access().task_structs[id]
             .trap_ctx_frame
             .get_mut()
     }
 
     pub fn translate_vp(&self, id: usize, vp: Page) -> Option<Frame> {
-        self.inner.exclusive_access().task_infos[id]
+        self.inner.exclusive_access().task_structs[id]
             .addr_space
             .page_table
             .translate_vp(vp)

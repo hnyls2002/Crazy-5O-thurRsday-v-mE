@@ -20,7 +20,7 @@ pub enum TaskStatus {
     Excited,
 }
 
-pub struct TaskInfo {
+pub struct TaskStruct {
     pub task_id: usize,
     pub status: TaskStatus,
     pub addr_space: MemorySet,
@@ -28,7 +28,7 @@ pub struct TaskInfo {
     pub trap_ctx_frame: Frame,
 }
 
-impl TaskInfo {
+impl TaskStruct {
     pub fn new_init(task_id: usize) -> Self {
         // build memory set
         let elf_data = load_app(task_id);
@@ -65,7 +65,7 @@ impl TaskInfo {
             trap_handler as usize,
         );
 
-        TaskInfo {
+        TaskStruct {
             task_id,
             status: TaskStatus::Ready,
             addr_space: user_space,
