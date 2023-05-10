@@ -1,5 +1,6 @@
 use self::task_manager::task_manager_init;
 
+pub mod kernel_stack;
 pub mod pid_allocator;
 pub mod processor;
 pub mod switch;

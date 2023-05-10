@@ -1,17 +1,11 @@
-use alloc::collections::BTreeMap;
-
 use crate::{
     app_loader::load_app,
-    config::{kernel_stack_range, TRAP_CTX_VIRT_ADDR},
-    mm::{
-        kernel_space::{add_kernel_stack, kernel_token},
-        memory_set::MemorySet,
-        Frame, MapArea, MapPerm, MapType, VPRange,
-    },
+    config::TRAP_CTX_VIRT_ADDR,
+    mm::{kernel_space::kernel_token, memory_set::MemorySet, Frame},
     trap::{trap_context::TrapContext, trap_handler, trap_return},
 };
 
-use super::task_context::TaskContext;
+use super::{kernel_stack::KernelStack, task_context::TaskContext};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TaskStatus {
@@ -26,6 +20,7 @@ pub struct TaskStruct {
     pub addr_space: MemorySet,
     pub task_ctx: TaskContext,
     pub trap_ctx_frame: Frame,
+    pub kernel_stack: KernelStack,
 }
 
 impl TaskStruct {
@@ -35,20 +30,10 @@ impl TaskStruct {
         let (user_space, entry_addr, user_sp) =
             MemorySet::new_from_elf(elf_data.expect("failed to load app"));
 
-        // build the kernel stack
-        let kt_range = kernel_stack_range(task_id);
-        let kernel_sp = (kt_range.1).0;
-        let kernel_stack = MapArea::new(
-            VPRange::new(kt_range.0, kt_range.1),
-            MapType::Framed(BTreeMap::new()),
-            MapPerm::R | MapPerm::W,
-            None,
-        );
-
-        add_kernel_stack(kernel_stack);
+        let kernel_stack = KernelStack::new(task_id);
 
         // initialize the task context
-        let task_ctx = TaskContext::new(kernel_sp, trap_return as usize);
+        let task_ctx = TaskContext::new(kernel_stack.sp(), trap_return as usize);
 
         // initialize the trap context
         let trap_ctx_frame = user_space
@@ -61,7 +46,7 @@ impl TaskStruct {
             entry_addr,
             user_sp,
             kernel_token(),
-            kernel_sp,
+            kernel_stack.sp(),
             trap_handler as usize,
         );
 
@@ -69,6 +54,7 @@ impl TaskStruct {
             task_id,
             status: TaskStatus::Ready,
             addr_space: user_space,
+            kernel_stack,
             task_ctx,
             trap_ctx_frame,
         }

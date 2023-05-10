@@ -16,7 +16,7 @@ pub struct KernelSpace {
 }
 
 lazy_static! {
-    pub static ref KERNEL_SPACE: KernelSpace = KernelSpace {
+    static ref KERNEL_SPACE: KernelSpace = KernelSpace {
         inner: UPSafeCell::new(MemorySet::new_bare())
     };
 }

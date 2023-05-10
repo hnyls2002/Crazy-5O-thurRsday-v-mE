@@ -36,14 +36,3 @@ pub const KERNEL_STACK_SIZE: usize = 0x2000; // 8KB
 pub const VIRT_ADDR_MAX: VirtAddr = VirtAddr(usize::MAX);
 pub const TRAMPOLINE_VIRT_ADDR: VirtAddr = VirtAddr(VIRT_ADDR_MAX.0 - PAGE_BYTES + 1);
 pub const TRAP_CTX_VIRT_ADDR: VirtAddr = VirtAddr(TRAMPOLINE_VIRT_ADDR.0 - PAGE_BYTES);
-
-// a guard page between each task's kernel stack
-pub fn kernel_stack_range(task_id: usize) -> (VirtAddr, VirtAddr) {
-    let space_size = VirtAddr(KERNEL_STACK_SIZE + PAGE_BYTES).ceil_page().0;
-    (
-        VirtAddr(TRAMPOLINE_VIRT_ADDR.0 - (task_id + 1) * space_size + PAGE_BYTES),
-        VirtAddr(
-            TRAMPOLINE_VIRT_ADDR.0 - (task_id + 1) * space_size + PAGE_BYTES + KERNEL_STACK_SIZE,
-        ),
-    )
-}
