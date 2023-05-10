@@ -12,12 +12,6 @@
 #### Box
 - exclusive ownership
 
-#### Rc
-- multiple ownership, but immutable
-
-#### Arc
-- multiple ownership, immutable, thread safe
-
 #### RefCell
 - interior mutability : actually mutable, but defined as immutable
 - use it through `borrow() -> Ref<T>` or `borrow_mut() -> RefMut<T>`
@@ -31,8 +25,32 @@
 - interior mutability
 - exclusive access by copy
 
-#### Mutex
-- lock and unlock
+
+### Topics about thread safe
+
+https://stackoverflow.com/questions/59428096/understanding-the-send-trait
+
+#### `Send` trait and `Sync` trait
+
+- `Send` : transfer ownership between threads
+- `Sync` : multiple threads can access the same variable at the same time
+
+Most of rust's primitive data types are `Send`, except for `Rc` and `RefCell`.
+- `Rc` should manage all the *reference count* stuff which refers to the same data.
+- `RefCell` should manage all the *borrow* and *borrow_mut* stuff which refers to the same data.
+
+When `&T` is `Send`, `T` is `Sync`.
+
+#### `Mutex<T> where T: Send`
+
+- When `T` is `Send`, `Mutex<T>` is `Send` and `Sync`, which makes sense.
+- So `Mutex<Rc>` is not `Sync`.
+
+#### Rc
+- Reference counting, but not with atomic operation
+
+#### Arc
+- With atomic operation, which guarantees no data race.
 
 #### RefCell is not thread safe
 
@@ -41,14 +59,13 @@ https://users.rust-lang.org/t/why-refcell-can-not-be-send-between-threads-safely
 
 RefCell is always used with `Mutex<RefCell<T>>`
 
-#### Arc and Mutex
+#### Arc and Mutex : from a container view
 
-why Mutex needs an Arc : just a container to hold the mutex, to avoid lifetime issue
+`Arc<Mutex>` : `Arc` can be viewed as a container with reference counting. `Mutex` provides `Sync` trait.
 
 https://stackoverflow.com/questions/56574632/why-mutex-was-designed-to-need-an-arc-in-rust
 
-#### How to use RecCell globally 
-- I don't know how to implement a `Mutex`.
-- Our OS does not support multi-threading.
-- just create a new struct `UPSafeCell` and we assert that it is thread safe. (we only have one thread...) 
-- ~~tuo ku zi fang pi~~
+#### Cycle Reference in Rust
+
+- Cycle reference in `Arc` : memory leak
+- `Weak` : weak reference, no reference counting, no ownership.
