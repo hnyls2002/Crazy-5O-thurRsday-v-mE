@@ -1,8 +1,15 @@
 use core::fmt::{Result, Write};
 
-use crate::api::write;
+use crate::api::{read, write};
 
 const FD_STDOUT: usize = 1;
+const FD_STDIN: usize = 0;
+
+pub fn getchar() -> u8 {
+    let mut buf: [u8; 1] = [0; 1];
+    read(FD_STDIN, &mut buf);
+    buf[0]
+}
 
 struct Stdout;
 

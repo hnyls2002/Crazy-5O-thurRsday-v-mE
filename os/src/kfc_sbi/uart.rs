@@ -30,3 +30,11 @@ pub fn uart_putc_sync(data: u8) {
     while read_reg(LSR) & LSR_TX_IDLE as u8 == 0 {}
     write_reg(THR, data);
 }
+
+// 0 means no input data
+pub fn uart_getc() -> u8 {
+    if read_reg(LSR) & LSR_RX_READY as u8 == 0 {
+        return 0;
+    }
+    read_reg(RHR)
+}

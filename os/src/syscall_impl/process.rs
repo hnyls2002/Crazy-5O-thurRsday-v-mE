@@ -11,7 +11,7 @@ pub fn sys_exit_impl(exit_code: i32) -> ! {
 
 // times in ms
 pub fn sys_times_impl() -> isize {
-    (get_time() / CLOCK_FREQ * MSEC_PER_SEC) as isize
+    (get_time() / (CLOCK_FREQ / MSEC_PER_SEC)) as isize
 }
 
 pub fn sys_yield_impl() -> isize {

@@ -2,8 +2,12 @@ use core::fmt::{Result, Write};
 
 use crate::kfc_sbi::uart;
 
-fn console_putc(c: u8) {
+pub fn console_putc(c: u8) {
     uart::uart_putc_sync(c);
+}
+
+pub fn console_getc() -> u8 {
+    uart::uart_getc()
 }
 
 struct Stdout;

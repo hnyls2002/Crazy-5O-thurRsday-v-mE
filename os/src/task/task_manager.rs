@@ -143,7 +143,7 @@ pub fn get_cur_token() -> usize {
 }
 
 // virtual address may be continous, but physical address may not be
-pub fn translate_cur_byte_buffer(buf: usize, len: usize) -> Option<Vec<&'static [u8]>> {
+pub fn translate_cur_byte_buffer_mut(buf: usize, len: usize) -> Option<Vec<&'static mut [u8]>> {
     let cur_id = TASK_MANAGER.cur_id();
     let mut ret = Vec::new();
     let mut cur_va = VirtAddr(buf);
@@ -151,7 +151,7 @@ pub fn translate_cur_byte_buffer(buf: usize, len: usize) -> Option<Vec<&'static 
     while rem_len > 0 {
         let cur_slice_len = min(cur_va.floor_page().next_page().0 - cur_va.0, rem_len);
         let cur_frame = TASK_MANAGER.translate_vp(cur_id, cur_va.floor_page())?;
-        let slice = &cur_frame.get_bytes_array_mut()
+        let slice = &mut cur_frame.get_bytes_array_mut()
             [cur_va.get_offset()..cur_va.get_offset() + cur_slice_len];
         ret.push(slice);
         cur_va.0 += cur_slice_len;
