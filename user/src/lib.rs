@@ -8,20 +8,19 @@ pub mod console;
 #[macro_use]
 mod kfc_logger;
 
+pub mod api;
 mod lang_items;
-pub mod syscall;
+mod syscall;
 mod up_safe_cell;
 mod user_heap;
 
-pub use syscall::{sys_exit, sys_write};
-
-use crate::user_heap::heap_init;
+use crate::{api::exit, user_heap::heap_init};
 
 #[no_mangle]
 #[link_section = ".text.entry"]
 pub extern "C" fn _start() -> ! {
     heap_init();
-    sys_exit(main());
+    exit(main());
     panic!("app should exit!");
 }
 
