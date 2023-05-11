@@ -97,4 +97,41 @@ impl TaskStruct {
             }),
         }
     }
+
+    // trap context : as the same as the context "when task traps in"
+    // but the kernel_sp should change
+    // task context : initial task context, return to trap_return
+    pub fn fork_task_struct(&self) -> Self {
+        let pid = pid_alloc();
+
+        let user_space = self.inner.exclusive_access().user_space.fork_memory_set();
+
+        let kernel_stack = KernelStack::new(*pid);
+
+        let task_ctx = TaskContext::new(kernel_stack.sp(), trap_return as usize);
+
+        let trap_ctx_frame = user_space
+            .page_table
+            .translate_vp(TRAP_CTX_VIRT_ADDR.floor_page())
+            .unwrap();
+
+        let trap_ctx = trap_ctx_frame.get_mut::<TrapContext>();
+        // only kernel sp changes
+        trap_ctx.kernel_sp = kernel_stack.sp();
+
+        let inner = TaskStructInner {
+            task_ctx,
+            trap_ctx_frame,
+            status: TaskStatus::Ready,
+            user_space,
+        };
+
+        TaskStruct {
+            kernel_stack,
+            pid,
+            name: self.name,
+            token: inner.user_space.get_satp_token(),
+            inner: UPSafeCell::new(inner),
+        }
+    }
 }

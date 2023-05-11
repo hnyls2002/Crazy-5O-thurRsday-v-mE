@@ -56,7 +56,12 @@ If no char incoming, wait for it or `yield` to other tasks.
 
 #### Process System Call
 
-- [ ] `sys_fork()` : copy current task
+- [ ] `sys_fork()` : copy exactly the same task.
+- Generate a ready process, return to `trap_return` 
+  - Forked process doest't get return value of `sys_fork()`, just set it `a0 = 0`
+  - Parent process set `a0 = sys_fork()`
+- `TaskContext` : set `ra` to `trap_return`
+- `TrapContext` : the same as parent process, **except for `kernel_sp`**
 - [ ] `sys_exec()` : load from elf file
 - [ ] `sys_waitpid(pid, *exit_code)` : wait for child process, and get exit code. **release the space of task struct**
 - `sys_waitpid(-1)` : wait for any child process

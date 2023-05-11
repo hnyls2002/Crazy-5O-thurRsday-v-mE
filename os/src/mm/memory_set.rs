@@ -77,8 +77,10 @@ impl MemorySet {
     pub fn new_from_elf(elf_data: &[u8]) -> (Self, usize, usize) {
         let mut memory_set = MemorySet::new_bare();
 
+        // insert trampoline
         memory_set.insert_new_map_area(MapArea::new_trampoline());
 
+        // insert trap context
         let ctx_area = MapArea::new(
             VPRange::new(TRAP_CTX_VIRT_ADDR, TRAMPOLINE_VIRT_ADDR),
             MapType::Framed(BTreeMap::new()),
@@ -162,5 +164,37 @@ impl MemorySet {
             elf_headr.pt2.entry_point() as usize,
             user_stack_top.0,
         )
+    }
+
+    // fork all the areas except for trampoline : Target
+    pub fn fork_memory_set(&self) -> Self {
+        let mut memory_set = MemorySet::new_bare();
+
+        for area in self.map_areas.iter() {
+            let map_type = match area.map_type {
+                MapType::Identical => MapType::Identical,
+                MapType::Target(frame) => MapType::Target(frame),
+                MapType::Framed(_) => MapType::Framed(BTreeMap::new()),
+            };
+
+            let new_area =
+                MapArea::new(area.vp_range.clone(), map_type, area.map_perm.clone(), None);
+
+            // when framed, copy data
+            if let MapType::Framed(_) = new_area.map_type {
+                for it in new_area.vp_range.iter() {
+                    let vp = it.value();
+                    let pp_src = self.page_table.translate_vp(vp).expect("no physical page");
+                    let pp_dst = new_area.mapped_to(vp);
+                    pp_dst
+                        .get_bytes_array_mut()
+                        .copy_from_slice(pp_src.get_bytes_array_mut())
+                }
+            }
+
+            memory_set.insert_new_map_area(new_area);
+        }
+
+        memory_set
     }
 }
