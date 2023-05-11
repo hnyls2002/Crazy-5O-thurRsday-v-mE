@@ -3,18 +3,17 @@ pub mod trap_context;
 
 use crate::{
     config::TRAP_CTX_VIRT_ADDR,
-    task::task_manager::{exit_cur_run_next, suspend_cur_run_next},
+    task::{
+        exit_cur_run_next,
+        processor::{cur_satp_token, cur_trap_ctx_mut, get_cur_task_arc},
+        suspend_cur_run_next,
+    },
 };
 use core::arch::{asm, global_asm};
 
 use riscv::register::{scause, stval, stvec};
 
-use crate::{
-    config::TRAMPOLINE_VIRT_ADDR,
-    mm::Frame,
-    syscall_impl::syscall_dispathcer,
-    task::task_manager::{get_cur_token, get_cur_trap_ctx_mut},
-};
+use crate::{config::TRAMPOLINE_VIRT_ADDR, mm::Frame, syscall_impl::syscall_dispathcer};
 
 use self::kernel_trap::kernelvec;
 
@@ -31,7 +30,7 @@ pub fn trap_handler() -> ! {
     // when in S-mode, disable the exception
     // the interrupt has been disabled by hardware (sstatus.sie = 0)
     unsafe { stvec::write(kernelvec as usize, stvec::TrapMode::Direct) };
-    let trap_ctx = get_cur_trap_ctx_mut();
+    let trap_ctx = cur_trap_ctx_mut();
     let s_cause = scause::read();
     let s_tval = stval::read();
     match s_cause.cause() {
@@ -48,6 +47,8 @@ pub fn trap_handler() -> ! {
                     ) as usize;
                 }
                 _ => {
+                    let cur_task = get_cur_task_arc().expect("exception handler : no current task");
+                    info!("In process \"{}\", pid = {}",cur_task.name, *cur_task.pid);
                     info!("The exception \x1b[31m[{:?}]\x1b[34m happen at address : {:#X}, s_val : {:#X}", e,trap_ctx.s_epc, s_tval);
                     exit_cur_run_next();
                     // trap_ctx.s_epc += 4;
@@ -73,7 +74,7 @@ pub fn trap_return() -> ! {
     }
     let restore_va =
         TRAMPOLINE_VIRT_ADDR.0 + __restore_trap_ctx as usize - __save_trap_ctx as usize;
-    let user_satp: usize = get_cur_token();
+    let user_satp: usize = cur_satp_token();
     unsafe {
         // when jump back to user space, set stvec to trampoline again
         stvec::write(TRAMPOLINE_VIRT_ADDR.0, stvec::TrapMode::Direct);

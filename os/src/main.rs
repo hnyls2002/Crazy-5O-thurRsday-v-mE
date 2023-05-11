@@ -28,7 +28,7 @@ use riscv::register::{mepc, mstatus, satp, stvec};
 use crate::{
     config::{BOOT_STACK_SIZE, MEMORY_END},
     kfc_sbi::timer,
-    task::task_manager::run_first_task,
+    task::processor::proc_schedule,
     trap::kernel_trap::kernelvec,
 };
 
@@ -108,7 +108,7 @@ pub fn kernel_main() -> ! {
     kernel_init();
     // not need to enable s-mode interrupt here
     // unsafe { sstatus::set_sie() };
-    run_first_task();
+    proc_schedule();
     panic!("Unreachable in kernel_main!");
 }
 

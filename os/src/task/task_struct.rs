@@ -27,6 +27,7 @@ pub struct TaskStruct {
     // read only fields
     pub kernel_stack: KernelStack,
     pub pid: PIDTracker,
+    pub name: &'static str,
     pub token: usize,
     inner: UPSafeCell<TaskStructInner>,
 }
@@ -58,7 +59,7 @@ impl TaskStruct {
 }
 
 impl TaskStruct {
-    pub fn new_from_elf(name: &str) -> Self {
+    pub fn new_from_elf(name: &'static str) -> Self {
         let pid = pid_alloc();
         let elf_data = load_app_by_name(name);
         let (user_space, entry_addr, user_sp) =
@@ -86,6 +87,7 @@ impl TaskStruct {
         TaskStruct {
             kernel_stack,
             pid,
+            name,
             token: user_space.get_satp_token(),
             inner: UPSafeCell::new(TaskStructInner {
                 task_ctx,

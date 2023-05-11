@@ -1,9 +1,11 @@
 use crate::{
     kfc_sbi::timer::{get_time, CLOCK_FREQ, MSEC_PER_SEC},
-    task::task_manager::{exit_cur_run_next, suspend_cur_run_next},
+    task::{exit_cur_run_next, processor::get_cur_task_arc, suspend_cur_run_next},
 };
 
 pub fn sys_exit_impl(exit_code: i32) -> ! {
+    let cur_task = get_cur_task_arc().expect("exit implementation : no current task!");
+    info!("In process \"{}\", pid = {}", cur_task.name, *cur_task.pid);
     info!("Application exits with code {}", exit_code);
     exit_cur_run_next();
     panic!("Unreachable in syscall exit implentation");
