@@ -1,6 +1,3 @@
-// __switch function will exchange the kernel stack
-// some information should be exchanged by *.S function
-// __switch(task_ctx1, task_ctx2)
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct TaskContext {
@@ -19,7 +16,7 @@ impl TaskContext {
         }
     }
     /// an empty
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         Self {
             kernel_sp: 0,
             kernel_ra: 0,

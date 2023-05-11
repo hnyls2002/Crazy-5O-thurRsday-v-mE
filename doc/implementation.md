@@ -79,9 +79,8 @@ Some context for switch back to an app's kernel stack.
 - [x] fields including
  - `sp` for kernel stack
  - ~~`ra` for `__restore_ctx`~~ That's wrong!
- - `__switch` does not go back to `__store_ctx`, instead, it goes to the return address of the *current running kernel function* like `run_next_task()`...
- - callee saved registers : cause `__switch` is a `naked` function
-- [x] `switch` function
+ - `__switch` : naked function, but with `ra` stored when calling it. So `__switch(ctx1,ctx2)` actually to to another `__switch` in another kernel stack.
+ - callee saved registers
 
 
 **TrapContext**
