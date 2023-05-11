@@ -27,7 +27,7 @@ impl MemorySet {
         self.page_table.entry
     }
 
-    pub fn get_satp_token(&self) -> usize {
+    pub fn satp_token(&self) -> usize {
         8usize << 60 | self.get_pt_root_frame().get_ppn()
     }
 

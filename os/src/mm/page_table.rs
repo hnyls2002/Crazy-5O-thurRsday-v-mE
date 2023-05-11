@@ -1,10 +1,10 @@
-use alloc::vec::Vec;
+use alloc::{string::String, vec::Vec};
 use bitflags::bitflags;
 use riscv::addr::BitField;
 
 use crate::config::{PAGE_BYTES_BITS, PTE_FLAGS_MASK, PTE_PPN_RANGE};
 
-use super::{frame_alloc, Frame, FrameTracker, Page};
+use super::{frame_alloc, Frame, FrameTracker, Page, VirtAddr};
 
 bitflags! {
     pub struct PTEFlags : usize{
@@ -161,5 +161,21 @@ impl PageTable {
         } else {
             None
         }
+    }
+
+    pub fn translate_str(&self, start: *const u8) -> Option<String> {
+        let mut ret = String::new();
+        let mut ptr = start;
+        loop {
+            let va = VirtAddr(ptr as usize);
+            let pp = self.translate_vp(va.floor_page())?;
+            let c = pp.get_bytes_array_mut()[va.get_offset()];
+            match c {
+                0 => break,
+                _ => ret.push(c as char),
+            }
+            ptr = unsafe { ptr.add(1) };
+        }
+        Some(ret)
     }
 }

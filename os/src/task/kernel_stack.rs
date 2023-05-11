@@ -23,7 +23,7 @@ pub struct KernelStack {
 }
 
 impl KernelStack {
-    pub fn sp(&self) -> usize {
+    pub fn top_sp(&self) -> usize {
         (kernel_stack_range(self.pid).1).0
     }
     pub fn new(pid: usize) -> Self {

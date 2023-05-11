@@ -48,7 +48,11 @@ pub fn trap_handler() -> ! {
                 }
                 _ => {
                     let cur_task = get_cur_task_arc().expect("exception handler : no current task");
-                    info!("In process \"{}\", pid = {}", cur_task.name, *cur_task.pid);
+                    info!(
+                        "In process \"{}\", pid = {}",
+                        cur_task.get_name(),
+                        *cur_task.pid
+                    );
                     info!("The exception \x1b[31m[{:?}]\x1b[34m happen at address : {:#X}, s_val : {:#X}", e,trap_ctx.s_epc, s_tval);
                     exit_cur_run_next();
                     // trap_ctx.s_epc += 4;

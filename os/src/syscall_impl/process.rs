@@ -10,7 +10,11 @@ use crate::{
 
 pub fn sys_exit_impl(exit_code: i32) -> ! {
     let cur_task = get_cur_task_arc().expect("exit implementation : no current task!");
-    info!("In process \"{}\", pid = {}", cur_task.name, *cur_task.pid);
+    info!(
+        "In process \"{}\", pid = {}",
+        cur_task.get_name(),
+        *cur_task.pid
+    );
     info!("Application exits with code {}", exit_code);
     exit_cur_run_next();
     panic!("Unreachable in syscall exit implentation");
@@ -41,7 +45,12 @@ pub fn sys_fork_impl() -> isize {
 
 // the pointer is in user's address space
 pub fn sys_exec_impl(path: *const u8) -> isize {
-    todo!()
+    let current = get_cur_task_arc().expect("no current task!");
+    if let Ok(_) = current.exec_from_elf(path) {
+        0
+    } else {
+        -1
+    }
 }
 
 pub fn sys_waitpid_impl(pid: isize, exit_code: *mut i32) -> isize {

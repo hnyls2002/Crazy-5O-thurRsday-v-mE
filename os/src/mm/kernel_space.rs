@@ -125,7 +125,7 @@ pub fn kernel_space_init() {
 }
 
 pub fn activate_kernel_space() {
-    let token = KERNEL_SPACE.inner.exclusive_access().get_satp_token();
+    let token = KERNEL_SPACE.inner.exclusive_access().satp_token();
     unsafe {
         satp::write(token);
         // satp::set(satp::Mode::Sv39, 0, ppn);
@@ -134,7 +134,7 @@ pub fn activate_kernel_space() {
 }
 
 pub fn kernel_token() -> usize {
-    KERNEL_SPACE.inner.exclusive_access().get_satp_token()
+    KERNEL_SPACE.inner.exclusive_access().satp_token()
 }
 
 pub fn kernel_pte(vp: Page) -> Option<PTE> {

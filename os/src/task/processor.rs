@@ -41,7 +41,7 @@ impl Processor {
             .current
             .as_ref()
             .expect("no current task")
-            .token
+            .satp_token()
     }
 
     fn idle_task_ctx_ptr(&self) -> *mut TaskContext {
