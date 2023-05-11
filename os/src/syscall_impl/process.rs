@@ -20,3 +20,16 @@ pub fn sys_yield_impl() -> isize {
     suspend_cur_run_next();
     0
 }
+
+pub fn sys_fork_impl() -> isize {
+    todo!()
+}
+
+// the pointer is in user's address space
+pub fn sys_exec_impl(path: *const u8) -> isize {
+    todo!()
+}
+
+pub fn sys_waitpid_impl(pid: isize, exit_code: *mut i32) -> isize {
+    todo!()
+}

@@ -1,9 +1,11 @@
+use alloc::sync::Arc;
+
 use crate::app_loader::get_app_names;
 
 use self::{
     processor::{switch_to_idle, take_out_current},
-    task_manager::{add_suspend_task, task_manager_init},
-    task_struct::TaskStatus,
+    task_manager::add_suspend_task,
+    task_struct::{TaskStatus, TaskStruct},
 };
 
 pub mod kernel_stack;
@@ -40,5 +42,6 @@ pub fn task_init() {
         info!("{}", name);
     }
     info!("==========================================================");
-    task_manager_init();
+    let initproc = TaskStruct::new_from_elf("shell");
+    add_suspend_task(Arc::new(initproc));
 }

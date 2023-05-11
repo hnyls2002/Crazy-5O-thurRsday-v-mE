@@ -51,16 +51,6 @@ impl TaskManagerInner {
     }
 }
 
-/// load all apps and init task manager
-pub fn task_manager_init() {
-    // TASK_MANAGER.inner.exclusive_access().init_all_apps();
-    let initproc = TaskStruct::new_from_elf("shell");
-    TASK_MANAGER
-        .inner
-        .exclusive_access()
-        .add(Arc::new(initproc));
-}
-
 pub fn fetch_ready_task() -> Option<Arc<TaskStruct>> {
     TASK_MANAGER.inner.exclusive_access().fetch()
 }

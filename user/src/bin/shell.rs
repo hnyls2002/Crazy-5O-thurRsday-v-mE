@@ -2,7 +2,10 @@
 #![no_main]
 
 use alloc::string::String;
-use user_lib::console::getchar;
+use user_lib::{
+    api::{exec, fork, waitpid},
+    console::getchar,
+};
 
 #[macro_use]
 extern crate user_lib;
@@ -27,8 +30,17 @@ pub fn main() -> isize {
             CC => break,
             LF | CR => {
                 println!("");
-                print!("{}", SHELL);
-                println!("The last input line is '{}'", line);
+                let pid = fork();
+                if pid == 0 {
+                    if exec(line.as_str()) == -1 {
+                        error!("App {} exec failed!", line);
+                        break;
+                    } else {
+                        let mut exit_code = 0;
+                        let exit_pid = waitpid(pid as usize, &mut exit_code);
+                        assert!(exit_pid == pid, "waitpid error");
+                    }
+                }
                 line.clear();
                 print!("{}", SHELL);
             }
