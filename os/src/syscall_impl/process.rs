@@ -43,6 +43,10 @@ pub fn sys_fork_impl() -> isize {
     pid
 }
 
+pub fn sys_getpid_impl() -> isize {
+    *get_cur_task_arc().expect("no current task").pid as isize
+}
+
 // the pointer is in user's address space
 pub fn sys_exec_impl(path: *const u8) -> isize {
     let current = get_cur_task_arc().expect("no current task!");

@@ -36,6 +36,7 @@ pub fn exec(path: &str) -> isize {
 }
 
 pub fn waitpid(pid: usize, exit_code: &mut i32) -> isize {
+    loop {}
     todo!()
 }
 

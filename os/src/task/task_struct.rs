@@ -162,15 +162,14 @@ impl TaskStruct {
         self.inner.exclusive_access().name = name.clone();
 
         // pid : no change
-        let elf_data = load_app_by_name(&name);
+        let elf_data = load_app_by_name(&name).expect("failed to load app");
 
         // kernel stack doesn't need to be updated
 
         // task context doesn't need to be updated
 
         // alloc new user_space and replace the old one
-        let (user_space, entry_addr, user_sp) =
-            MemorySet::new_from_elf(elf_data.expect("failed to load app"));
+        let (user_space, entry_addr, user_sp) = MemorySet::new_from_elf(elf_data);
         self.inner.exclusive_access().user_space = user_space;
 
         // get new trap context frame
@@ -181,6 +180,8 @@ impl TaskStruct {
             .page_table
             .translate_vp(TRAP_CTX_VIRT_ADDR.floor_page())
             .unwrap();
+        // !!! update the trap context frame !!!
+        self.inner.exclusive_access().trap_ctx_frame = trap_ctx_frame;
 
         // trap context : set to entry point of the new code
         let trap_ctx = trap_ctx_frame.get_mut::<TrapContext>();

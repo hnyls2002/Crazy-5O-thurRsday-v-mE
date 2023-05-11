@@ -34,13 +34,15 @@ pub fn main() -> isize {
                 if pid == 0 {
                     if exec(line.as_str()) == -1 {
                         error!("App {} exec failed!", line);
-                        break;
-                    } else {
-                        let mut exit_code = 0;
-                        let exit_pid = waitpid(pid as usize, &mut exit_code);
-                        assert!(exit_pid == pid, "waitpid error");
+                        return -4;
                     }
+                } else {
+                    debug!("waiting for pid...");
+                    let mut exit_code = 0;
+                    let exit_pid = waitpid(pid as usize, &mut exit_code);
+                    assert!(exit_pid == pid, "waitpid error");
                 }
+
                 line.clear();
                 print!("{}", SHELL);
             }

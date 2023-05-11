@@ -1,8 +1,8 @@
 use self::{
     fs::{sys_read_impl, sys_write_impl},
     process::{
-        sys_exec_impl, sys_exit_impl, sys_fork_impl, sys_times_impl, sys_waitpid_impl,
-        sys_yield_impl,
+        sys_exec_impl, sys_exit_impl, sys_fork_impl, sys_getpid_impl, sys_times_impl,
+        sys_waitpid_impl, sys_yield_impl,
     },
 };
 
@@ -17,6 +17,7 @@ const SYSCALL_READ: usize = 63;
 const SYSCALL_FORK: usize = 220;
 const SYSCALL_EXEC: usize = 221;
 const SYSCALL_WAITPID: usize = 260;
+const SYSCALL_GETPID: usize = 172;
 
 pub fn syscall_dispathcer(id: usize, args: [usize; 3]) -> isize {
     match id {
@@ -28,6 +29,7 @@ pub fn syscall_dispathcer(id: usize, args: [usize; 3]) -> isize {
         SYSCALL_FORK => sys_fork_impl(),
         SYSCALL_EXEC => sys_exec_impl(args[0] as *const u8),
         SYSCALL_WAITPID => sys_waitpid_impl(args[0] as isize, args[1] as *mut i32),
+        SYSCALL_GETPID => sys_getpid_impl(),
         _ => panic!("unsupported syscall id: {}", id),
     }
 }
