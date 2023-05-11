@@ -24,8 +24,8 @@ fn main() -> i32 {
         assert_eq!(v[i], i);
     }
     v.reverse();
-    for it in v.iter() {
-        println!("{}", it);
+    for i in 0..100 {
+        assert_eq!(v[i], 100 - i - 1);
     }
     0
 }

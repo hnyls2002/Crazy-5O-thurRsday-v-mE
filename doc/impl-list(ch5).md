@@ -43,6 +43,11 @@ If no char incoming, wait for it or `yield` to other tasks.
 #### Resources Management
 
 - [ ] Resources release support.
+- Frames for memory in `MemorySet` : `map_areas` will drop.
+- `PageTable` : when dropping `TaskStruct` after `sys_waitpid()`.
+- `KernelStack` : RAII, dropped by compiler also after `sys_waitpid()`.
+- `trap_contex` : in memory frames.
+- `task_contex` : in kernel space.
 
 #### User Program
 

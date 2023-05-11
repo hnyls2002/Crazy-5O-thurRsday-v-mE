@@ -1,11 +1,13 @@
 use crate::{
-    app_loader::load_app,
+    app_loader::load_app_by_name,
     config::TRAP_CTX_VIRT_ADDR,
-    mm::{kernel_space::kernel_token, memory_set::MemorySet, Frame},
+    kfc_util::up_safe_cell::UPSafeCell,
+    mm::{kernel_space::kernel_token, memory_set::MemorySet, Frame, Page},
+    task::pid_allocator::pid_alloc,
     trap::{trap_context::TrapContext, trap_handler, trap_return},
 };
 
-use super::{kernel_stack::KernelStack, task_context::TaskContext};
+use super::{kernel_stack::KernelStack, pid_allocator::PIDTracker, task_context::TaskContext};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TaskStatus {
@@ -14,23 +16,54 @@ pub enum TaskStatus {
     Excited,
 }
 
-pub struct TaskStruct {
-    pub task_id: usize,
-    pub status: TaskStatus,
-    pub addr_space: MemorySet,
+pub struct TaskStructInner {
     pub task_ctx: TaskContext,
     pub trap_ctx_frame: Frame,
+    pub status: TaskStatus,
+    pub user_space: MemorySet,
+}
+
+pub struct TaskStruct {
+    // read only fields
     pub kernel_stack: KernelStack,
+    pub pid: PIDTracker,
+    pub token: usize,
+    inner: UPSafeCell<TaskStructInner>,
 }
 
 impl TaskStruct {
-    pub fn new_init(task_id: usize) -> Self {
-        // build memory set
-        let elf_data = load_app(task_id);
+    pub fn task_status(&self) -> TaskStatus {
+        self.inner.exclusive_access().status
+    }
+
+    pub fn mark_task_status(&self, status: TaskStatus) {
+        self.inner.exclusive_access().status = status;
+    }
+
+    pub fn translate_vp(&self, vp: Page) -> Option<Frame> {
+        self.inner
+            .exclusive_access()
+            .user_space
+            .page_table
+            .translate_vp(vp)
+    }
+
+    pub fn trap_ctx_mut(&self) -> &'static mut TrapContext {
+        self.inner.exclusive_access().trap_ctx_frame.get_mut()
+    }
+
+    pub fn task_ctx_ptr(&self) -> *mut TaskContext {
+        &self.inner.exclusive_access().task_ctx as *const _ as *mut _
+    }
+}
+
+impl TaskStruct {
+    pub fn new_from_elf(name: &str) -> Self {
+        let pid = pid_alloc();
+        let elf_data = load_app_by_name(name);
         let (user_space, entry_addr, user_sp) =
             MemorySet::new_from_elf(elf_data.expect("failed to load app"));
-
-        let kernel_stack = KernelStack::new(task_id);
+        let kernel_stack = KernelStack::new(*pid);
 
         // initialize the task context
         let task_ctx = TaskContext::new(kernel_stack.sp(), trap_return as usize);
@@ -51,12 +84,15 @@ impl TaskStruct {
         );
 
         TaskStruct {
-            task_id,
-            status: TaskStatus::Ready,
-            addr_space: user_space,
             kernel_stack,
-            task_ctx,
-            trap_ctx_frame,
+            pid,
+            token: user_space.get_satp_token(),
+            inner: UPSafeCell::new(TaskStructInner {
+                task_ctx,
+                trap_ctx_frame,
+                status: TaskStatus::Ready,
+                user_space,
+            }),
         }
     }
 }

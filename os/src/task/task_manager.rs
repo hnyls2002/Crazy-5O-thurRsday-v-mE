@@ -11,7 +11,7 @@
 use alloc::vec::Vec;
 
 use crate::{
-    app_loader::get_app_num,
+    app_loader::get_app_names,
     kfc_sbi::sbi_shutdown,
     kfc_util::up_safe_cell::UPSafeCell,
     mm::{Frame, Page, VirtAddr},
@@ -56,9 +56,11 @@ impl TaskManagerInner {
         }
     }
     pub fn init_all_apps(&mut self) {
-        self.task_num = get_app_num();
-        for i in 0..self.task_num {
-            self.task_structs.push(TaskStruct::new_init(i));
+        let app_names = get_app_names();
+        self.task_num = app_names.len();
+        for name in app_names.iter() {
+            info!("loading app {} into memory", name);
+            self.task_structs.push(TaskStruct::new_from_elf(name));
         }
     }
 
@@ -66,7 +68,7 @@ impl TaskManagerInner {
         let start_id = self.cur_task.map_or(0, |cur_id| cur_id + 1);
         for i in 0..self.task_num {
             let possible_next = (start_id + i) % self.task_num;
-            if self.task_structs[possible_next].status == TaskStatus::Ready {
+            if self.task_structs[possible_next].task_status() == TaskStatus::Ready {
                 return Some(possible_next);
             }
         }
@@ -74,7 +76,7 @@ impl TaskManagerInner {
     }
 
     pub fn mark_task_status(&mut self, id: usize, status: TaskStatus) {
-        self.task_structs[id].status = status;
+        self.task_structs[id].mark_task_status(status);
         if status == TaskStatus::Running {
             self.cur_task = Some(id);
         } else {
@@ -96,26 +98,19 @@ impl TaskManager {
     }
 
     pub fn get_token(&self, id: usize) -> usize {
-        self.inner.exclusive_access().task_structs[id]
-            .addr_space
-            .get_satp_token()
+        self.inner.exclusive_access().task_structs[id].token
     }
 
     pub fn task_ctx_ptr(&self, id: usize) -> *mut TaskContext {
-        &self.inner.exclusive_access().task_structs[id].task_ctx as *const _ as *mut _
+        self.inner.exclusive_access().task_structs[id].task_ctx_ptr()
     }
 
     pub fn trap_ctx_mut(&self, id: usize) -> &'static mut TrapContext {
-        self.inner.exclusive_access().task_structs[id]
-            .trap_ctx_frame
-            .get_mut()
+        self.inner.exclusive_access().task_structs[id].trap_ctx_mut()
     }
 
     pub fn translate_vp(&self, id: usize, vp: Page) -> Option<Frame> {
-        self.inner.exclusive_access().task_structs[id]
-            .addr_space
-            .page_table
-            .translate_vp(vp)
+        self.inner.exclusive_access().task_structs[id].translate_vp(vp)
     }
 
     pub fn mark_task_status(&self, id: usize, status: TaskStatus) {

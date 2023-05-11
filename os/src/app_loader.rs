@@ -43,7 +43,7 @@ lazy_static! {
 }
 
 // get idx-th app's data
-pub fn load_app(idx: usize) -> Option<&'static [u8]> {
+fn load_app(idx: usize) -> Option<&'static [u8]> {
     if idx >= APP_DATA.len() {
         return None;
     }
@@ -61,6 +61,10 @@ pub fn load_app_by_name(name: &str) -> Option<&'static [u8]> {
         .map_or(None, |idx| Some(load_app(idx)?))
 }
 
-pub fn get_app_num() -> usize {
-    APP_DATA.len()
+pub fn get_app_names() -> Vec<&'static str> {
+    let mut ret = Vec::new();
+    for it in APP_DATA.iter() {
+        ret.push(it.name)
+    }
+    ret
 }

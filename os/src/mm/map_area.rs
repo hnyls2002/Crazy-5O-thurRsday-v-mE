@@ -129,15 +129,6 @@ impl MapArea {
         ret
     }
 
-    pub fn new_trampoline() -> Self {
-        Self::new(
-            VPRange::new(TRAMPOLINE_VIRT_ADDR, VIRT_ADDR_MAX),
-            MapType::Target(trampoline_frame()),
-            MapPerm::X | MapPerm::R,
-            None,
-        )
-    }
-
     /// ### get the physical frame of a virtual page
     /// 1. if map_type is identical, then vp == pp
     /// 2. if map_type is framed, then vp is the key of `mem_frames` : we assume that this pp has been allocated before
@@ -161,5 +152,17 @@ impl<'a> FillData<'a> {
             fill_va_range: VARange::new(start_va, end_va),
             data,
         }
+    }
+}
+
+impl MapArea {
+    /// create a trampoline map_area
+    pub fn new_trampoline() -> Self {
+        Self::new(
+            VPRange::new(TRAMPOLINE_VIRT_ADDR, VIRT_ADDR_MAX),
+            MapType::Target(trampoline_frame()),
+            MapPerm::X | MapPerm::R,
+            None,
+        )
     }
 }
