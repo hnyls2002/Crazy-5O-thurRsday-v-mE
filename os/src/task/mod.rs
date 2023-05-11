@@ -1,3 +1,5 @@
+use crate::app_loader::get_app_names;
+
 use self::{
     processor::{switch_to_idle, take_out_current},
     task_manager::{add_suspend_task, task_manager_init},
@@ -32,5 +34,11 @@ pub fn exit_cur_run_next() {
 }
 
 pub fn task_init() {
+    let name_list = get_app_names();
+    info!("====================The Supported Apps====================");
+    for &name in name_list.iter() {
+        info!("{}", name);
+    }
+    info!("==========================================================");
     task_manager_init();
 }

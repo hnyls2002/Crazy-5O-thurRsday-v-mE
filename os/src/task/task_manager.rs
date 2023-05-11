@@ -32,6 +32,7 @@ pub struct TaskManagerInner {
 }
 
 impl TaskManagerInner {
+    #[allow(dead_code)]
     pub fn init_all_apps(&mut self) {
         let app_names = get_app_names();
         for name in app_names.iter() {
@@ -52,7 +53,12 @@ impl TaskManagerInner {
 
 /// load all apps and init task manager
 pub fn task_manager_init() {
-    TASK_MANAGER.inner.exclusive_access().init_all_apps();
+    // TASK_MANAGER.inner.exclusive_access().init_all_apps();
+    let initproc = TaskStruct::new_from_elf("shell");
+    TASK_MANAGER
+        .inner
+        .exclusive_access()
+        .add(Arc::new(initproc));
 }
 
 pub fn fetch_ready_task() -> Option<Arc<TaskStruct>> {

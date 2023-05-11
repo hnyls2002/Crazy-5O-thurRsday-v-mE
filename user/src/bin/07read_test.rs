@@ -1,8 +1,9 @@
 #![no_std]
 #![no_main]
 
-use user_lib::{console::getchar, println};
+use user_lib::console::getchar;
 
+#[macro_use]
 extern crate user_lib;
 
 #[no_mangle]
