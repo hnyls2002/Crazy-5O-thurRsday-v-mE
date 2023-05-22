@@ -19,6 +19,14 @@ binary: elf
 
 build: binary
 
+app ?= hello
+
+disasm : elf
+	@$(OBJDUMP) -d $(TARGET_DIR)/$(app) > $(TARGET_DIR)/$(app).asm
+	@vim $(TARGET_DIR)/$(app).asm
+	@rm $(TARGET_DIR)/$(app).asm
+
+
 clean:
 	@cargo clean
 
