@@ -3,11 +3,8 @@ pub mod trap_context;
 
 use crate::{
     config::TRAP_CTX_VIRT_ADDR,
-    task::{
-        exit_cur_run_next,
-        processor::{cur_satp_token, cur_trap_ctx_mut, get_cur_task_arc},
-        suspend_cur_run_next,
-    },
+    mm::PageTable,
+    task::{exit_cur_run_next, suspend_cur_run_next, PROCESSOR},
 };
 use core::arch::{asm, global_asm};
 
@@ -30,7 +27,7 @@ pub fn trap_handler() -> ! {
     // when in S-mode, disable the exception
     // the interrupt has been disabled by hardware (sstatus.sie = 0)
     unsafe { stvec::write(kernelvec as usize, stvec::TrapMode::Direct) };
-    let trap_ctx = cur_trap_ctx_mut();
+    let trap_ctx = PROCESSOR.cur_trap_ctx_mut();
     let s_cause = scause::read();
     let s_tval = stval::read();
     match s_cause.cause() {
@@ -47,7 +44,9 @@ pub fn trap_handler() -> ! {
                     ) as usize;
                 }
                 _ => {
-                    let cur_task = get_cur_task_arc().expect("exception handler : no current task");
+                    let cur_task = PROCESSOR
+                        .current_arc()
+                        .expect("exception handler : no current task");
                     info!(
                         "In process \"{}\", pid = {}",
                         cur_task.get_name(),
@@ -78,7 +77,7 @@ pub fn trap_return() -> ! {
     }
     let restore_va =
         TRAMPOLINE_VIRT_ADDR.0 + __restore_trap_ctx as usize - __save_trap_ctx as usize;
-    let user_satp: usize = cur_satp_token();
+    let user_satp: usize = PageTable::satp_token(PROCESSOR.current_arc().unwrap().pt_entry());
     unsafe {
         // when jump back to user space, set stvec to trampoline again
         stvec::write(TRAMPOLINE_VIRT_ADDR.0, stvec::TrapMode::Direct);

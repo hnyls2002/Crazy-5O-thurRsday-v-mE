@@ -7,7 +7,7 @@ use crate::{
     mm::map_area::FillData,
 };
 
-use super::{Frame, MapArea, MapPerm, MapType, PTEFlags, PageTable, VPRange, VirtAddr};
+use super::{MapArea, MapPerm, MapType, PTEFlags, PageTable, VPRange, VirtAddr};
 
 pub struct MemorySet {
     pub map_areas: Vec<MapArea>,
@@ -21,14 +21,6 @@ impl MemorySet {
             map_areas: Vec::new(),
             page_table: PageTable::new(),
         }
-    }
-
-    fn get_pt_root_frame(&self) -> Frame {
-        self.page_table.entry
-    }
-
-    pub fn satp_token(&self) -> usize {
-        8usize << 60 | self.get_pt_root_frame().get_ppn()
     }
 
     /// build realations in **page_table**

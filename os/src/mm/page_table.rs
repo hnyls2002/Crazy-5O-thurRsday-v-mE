@@ -1,3 +1,5 @@
+use core::cmp::min;
+
 use alloc::{string::String, vec::Vec};
 use bitflags::bitflags;
 use riscv::addr::BitField;
@@ -153,6 +155,12 @@ impl PageTable {
             Err(())
         }
     }
+}
+
+impl PageTable {
+    pub fn satp_token(pt_entry: Frame) -> usize {
+        8usize << 60 | pt_entry.get_ppn()
+    }
 
     pub fn translate_vp(&self, vp: Page) -> Option<Frame> {
         let pte = self.find_pte(vp)?;
@@ -175,6 +183,26 @@ impl PageTable {
                 _ => ret.push(c as char),
             }
             ptr = unsafe { ptr.add(1) };
+        }
+        Some(ret)
+    }
+
+    pub fn translate_byte_buffer_mut(
+        &self,
+        buf: usize,
+        len: usize,
+    ) -> Option<Vec<&'static mut [u8]>> {
+        let mut ret = Vec::new();
+        let mut cur_va = VirtAddr(buf);
+        let mut rem_len = len;
+        while rem_len > 0 {
+            let cur_slice_len = min(cur_va.floor_page().next_page().0 - cur_va.0, rem_len);
+            let cur_frame = self.translate_vp(cur_va.floor_page())?;
+            let slice = &mut cur_frame.get_bytes_array_mut()
+                [cur_va.get_offset()..cur_va.get_offset() + cur_slice_len];
+            ret.push(slice);
+            cur_va.0 += cur_slice_len;
+            rem_len -= cur_slice_len;
         }
         Some(ret)
     }

@@ -9,15 +9,15 @@ use crate::{
     mm::{MapArea, MapPerm, MapType, VPRange, VirtAddr},
 };
 
-use super::{MemorySet, Page, PTE};
+use super::{Frame, MemorySet, PageTable};
 
 pub struct KernelSpace {
     inner: UPSafeCell<MemorySet>,
 }
 
 lazy_static! {
-    static ref KERNEL_SPACE: KernelSpace = KernelSpace {
-        inner: UPSafeCell::new(MemorySet::new_bare())
+    pub static ref KERNEL_SPACE: KernelSpace = KernelSpace {
+        inner: UPSafeCell::new(MemorySet::new_bare()),
     };
 }
 
@@ -120,30 +120,23 @@ impl MemorySet {
     }
 }
 
+impl KernelSpace {
+    pub fn pt_entry(&self) -> Frame {
+        self.inner.exclusive_access().page_table.entry
+    }
+}
+
 pub fn kernel_space_init() {
     KERNEL_SPACE.inner.exclusive_access().kernel_init()
 }
 
 pub fn activate_kernel_space() {
-    let token = KERNEL_SPACE.inner.exclusive_access().satp_token();
+    let token = PageTable::satp_token(KERNEL_SPACE.pt_entry());
     unsafe {
         satp::write(token);
         // satp::set(satp::Mode::Sv39, 0, ppn);
         asm!("sfence.vma");
     };
-}
-
-pub fn kernel_token() -> usize {
-    KERNEL_SPACE.inner.exclusive_access().satp_token()
-}
-
-pub fn kernel_pte(vp: Page) -> Option<PTE> {
-    KERNEL_SPACE
-        .inner
-        .exclusive_access()
-        .page_table
-        .find_pte(vp)
-        .map_or(None, |pte| Some(pte.clone()))
 }
 
 pub fn add_kernel_stack(stack: MapArea) {

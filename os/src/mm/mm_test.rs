@@ -1,6 +1,8 @@
+use alloc::vec::Vec;
+
 use crate::{
     info,
-    mm::{kernel_space::kernel_pte, PTEFlags},
+    mm::{PTEFlags, PageTable, KERNEL_SPACE},
 };
 
 use super::VirtAddr;
@@ -23,16 +25,23 @@ pub fn remap_test() {
     let mid_data_vp = VirtAddr((sdata as usize + edata as usize) >> 1).floor_page();
     let mid_bss_vp = VirtAddr((ebss as usize + sbss as usize) >> 1).floor_page();
 
+    let kernel_pt = PageTable {
+        entry: KERNEL_SPACE.pt_entry(),
+        pt_frames: Vec::new(),
+    };
+
     assert!(
-        kernel_pte(mid_text_vp)
-            .expect("failed to find .text pte")
+        kernel_pt
+            .find_pte(mid_text_vp)
+            .expect("failed to find .text pt")
             .get_flags()
             == (PTEFlags::V | PTEFlags::R | PTEFlags::X),
         "text permission error"
     );
 
     assert!(
-        kernel_pte(mid_rodata_vp)
+        kernel_pt
+            .find_pte(mid_rodata_vp)
             .expect("failed to find .rodata pte")
             .get_flags()
             == PTEFlags::V | PTEFlags::R,
@@ -40,7 +49,8 @@ pub fn remap_test() {
     );
 
     assert!(
-        kernel_pte(mid_data_vp)
+        kernel_pt
+            .find_pte(mid_data_vp)
             .expect("failed to find .data pte")
             .get_flags()
             == PTEFlags::V | PTEFlags::R | PTEFlags::W,
@@ -48,7 +58,8 @@ pub fn remap_test() {
     );
 
     assert!(
-        kernel_pte(mid_bss_vp)
+        kernel_pt
+            .find_pte(mid_bss_vp)
             .expect("failed to find .bss pte")
             .get_flags()
             == PTEFlags::V | PTEFlags::R | PTEFlags::W,

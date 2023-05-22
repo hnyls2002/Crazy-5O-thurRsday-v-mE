@@ -4,7 +4,7 @@ use crate::{
     app_loader::load_app_by_name,
     config::TRAP_CTX_VIRT_ADDR,
     kfc_util::up_safe_cell::UPSafeCell,
-    mm::{kernel_space::kernel_token, memory_set::MemorySet, Frame, Page},
+    mm::{memory_set::MemorySet, Frame, PageTable, KERNEL_SPACE},
     task::pid_allocator::pid_alloc,
     trap::{trap_context::TrapContext, trap_handler, trap_return},
 };
@@ -38,6 +38,10 @@ impl TaskStruct {
         self.inner.exclusive_access().name.clone()
     }
 
+    pub fn pt_entry(&self) -> Frame {
+        self.inner.exclusive_access().user_space.page_table.entry
+    }
+
     pub fn task_status(&self) -> TaskStatus {
         self.inner.exclusive_access().status
     }
@@ -46,24 +50,12 @@ impl TaskStruct {
         self.inner.exclusive_access().status = status;
     }
 
-    pub fn translate_vp(&self, vp: Page) -> Option<Frame> {
-        self.inner
-            .exclusive_access()
-            .user_space
-            .page_table
-            .translate_vp(vp)
-    }
-
     pub fn trap_ctx_mut(&self) -> &'static mut TrapContext {
         self.inner.exclusive_access().trap_ctx_frame.get_mut()
     }
 
     pub fn task_ctx_ptr(&self) -> *mut TaskContext {
         &self.inner.exclusive_access().task_ctx as *const _ as *mut _
-    }
-
-    pub fn satp_token(&self) -> usize {
-        self.inner.exclusive_access().user_space.satp_token()
     }
 }
 
@@ -88,7 +80,7 @@ impl TaskStruct {
         *trap_ctx = TrapContext::init_trap_ctx(
             entry_addr,
             user_sp,
-            kernel_token(),
+            PageTable::satp_token(KERNEL_SPACE.pt_entry()),
             kernel_stack.top_sp(),
             trap_handler as usize,
         );
@@ -188,7 +180,7 @@ impl TaskStruct {
         *trap_ctx = TrapContext::init_trap_ctx(
             entry_addr,
             user_sp,
-            kernel_token(),
+            PageTable::satp_token(KERNEL_SPACE.pt_entry()),
             self.kernel_stack.top_sp(),
             trap_handler as usize,
         );

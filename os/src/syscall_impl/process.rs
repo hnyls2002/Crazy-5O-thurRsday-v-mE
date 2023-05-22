@@ -2,14 +2,13 @@ use alloc::sync::Arc;
 
 use crate::{
     kfc_sbi::timer::{get_time, CLOCK_FREQ, MSEC_PER_SEC},
-    task::{
-        exit_cur_run_next, processor::get_cur_task_arc, suspend_cur_run_next,
-        task_manager::add_suspend_task,
-    },
+    task::{exit_cur_run_next, suspend_cur_run_next, task_manager::add_suspend_task, PROCESSOR},
 };
 
 pub fn sys_exit_impl(exit_code: i32) -> ! {
-    let cur_task = get_cur_task_arc().expect("exit implementation : no current task!");
+    let cur_task = PROCESSOR
+        .current_arc()
+        .expect("exit implementation : no current task!");
     info!(
         "In process \"{}\", pid = {}",
         cur_task.get_name(),
@@ -31,7 +30,7 @@ pub fn sys_yield_impl() -> isize {
 }
 
 pub fn sys_fork_impl() -> isize {
-    let current = get_cur_task_arc().expect("no current task!");
+    let current = PROCESSOR.current_arc().expect("no current task!");
     let forked = Arc::new(current.fork_task_struct());
     let pid = *forked.pid as isize;
 
@@ -44,12 +43,12 @@ pub fn sys_fork_impl() -> isize {
 }
 
 pub fn sys_getpid_impl() -> isize {
-    *get_cur_task_arc().expect("no current task").pid as isize
+    *PROCESSOR.current_arc().expect("no current task!").pid as isize
 }
 
 // the pointer is in user's address space
 pub fn sys_exec_impl(path: *const u8) -> isize {
-    let current = get_cur_task_arc().expect("no current task!");
+    let current = PROCESSOR.current_arc().expect("no current task!");
     if let Ok(_) = current.exec_from_elf(path) {
         0
     } else {

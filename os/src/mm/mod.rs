@@ -11,6 +11,7 @@ pub mod page_table;
 pub use address::{PhysAddr, VARange, VirtAddr};
 pub use frame_allocator::{frame_alloc, frame_allocator_init, frame_dealloc, FrameTracker};
 pub use heap_allocator::{heap_init, heap_test::heap_test};
+pub use kernel_space::KERNEL_SPACE;
 pub use map_area::{MapArea, MapPerm, MapType};
 pub use memory_set::MemorySet;
 pub use page::{Frame, Page, VPRange};

@@ -3,7 +3,7 @@ use alloc::sync::Arc;
 use crate::app_loader::get_app_names;
 
 use self::{
-    processor::{switch_to_idle, take_out_current},
+    processor::switch_to_idle,
     task_manager::add_suspend_task,
     task_struct::{TaskStatus, TaskStruct},
 };
@@ -16,9 +16,11 @@ pub mod task_context;
 pub mod task_manager;
 pub mod task_struct;
 
+pub use processor::PROCESSOR;
+
 pub fn suspend_cur_run_next() {
     // suspend current task
-    let cur_task = take_out_current().expect("no current task");
+    let cur_task = PROCESSOR.take_out_current().expect("no current task");
     let cur_task_ctx_ptr = cur_task.task_ctx_ptr();
     cur_task.mark_task_status(TaskStatus::Ready);
     add_suspend_task(cur_task);
@@ -28,7 +30,7 @@ pub fn suspend_cur_run_next() {
 }
 
 pub fn exit_cur_run_next() {
-    let cur_task = take_out_current().expect("no current task");
+    let cur_task = PROCESSOR.take_out_current().expect("no current task");
     let cur_task_ctx_ptr = cur_task.task_ctx_ptr();
     cur_task.mark_task_status(TaskStatus::Excited);
     // TODO : free resources
