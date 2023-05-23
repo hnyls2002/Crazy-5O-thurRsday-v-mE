@@ -38,22 +38,23 @@ pub fn exec(path: &str) -> isize {
 
 pub fn waitpid(pid: usize, exit_code: &mut i32) -> isize {
     loop {
-        let result = sys_waitpid(pid as isize, exit_code);
-        if result == -2 {
-            yield_();
-        } else {
-            return result;
+        match sys_waitpid(pid as isize, exit_code) {
+            -2 => {
+                yield_();
+            }
+            exit_pid => return exit_pid,
         }
     }
 }
 
 pub fn wait(exit_code: &mut i32) -> isize {
     loop {
-        let result = sys_waitpid(-1, exit_code);
-        if result == -2 {
-            yield_();
+        match sys_waitpid(-1, exit_code) {
+            -2 => {
+                yield_();
+            }
+            exit_pid => return exit_pid,
         }
-        return result;
     }
 }
 

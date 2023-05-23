@@ -13,10 +13,10 @@ pub fn main() -> i32 {
     if pid == 0 {
         // child process
         println!(
-            "pid {}: forked child start execing hello_world app ... ",
+            "pid {}: forked child start execing hello app ... ",
             getpid()
         );
-        exec("hello_world");
+        exec("hello");
         100
     } else {
         // parent process

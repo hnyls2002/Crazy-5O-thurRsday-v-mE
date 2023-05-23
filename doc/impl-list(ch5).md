@@ -10,7 +10,7 @@ If no char incoming, wait for it or `yield` to other tasks.
 
 - [x] PID allocator : RAII
 - [x] Kernel stack allocator : RAII
-- [ ] `TaskStruct`
+- [x] `TaskStruct`
 - pid
 - kernel stack resource
 - task status
@@ -28,8 +28,8 @@ If no char incoming, wait for it or `yield` to other tasks.
 
 ***
 
-- [ ] `TaskManager` : All tasks (ready tasks).
-- [ ] `Processor` : only running tasks, for later multi-core support.
+- [x] `TaskManager` : All tasks (ready tasks).
+- [x] `Processor` : only running tasks, for later multi-core support.
 
 - current task in `Processor`
 - `idle_task_ctx` : idle task context
@@ -42,7 +42,7 @@ If no char incoming, wait for it or `yield` to other tasks.
 
 #### Resources Management
 
-- [ ] Resources release support.
+- [x] Resources release support.
 - Frames for memory in `MemorySet` : `map_areas` will drop.
 - `PageTable` : when dropping `TaskStruct` after `sys_waitpid()`.
 - `KernelStack` : RAII, dropped by compiler also after `sys_waitpid()`.
@@ -51,19 +51,19 @@ If no char incoming, wait for it or `yield` to other tasks.
 
 #### User Program
 
-- [ ] `initproc` : init process
-- [ ] `user_shell` : user shell 
+- [x] `initproc` : init process
+- [x] `user_shell` : user shell 
 
 #### Process System Call
 
-- [ ] `sys_fork()` : copy exactly the same task.
+- [x] `sys_fork()` : copy exactly the same task.
 - Generate a ready process, return to `trap_return` 
   - Forked process doest't get return value of `sys_fork()`, just set it `a0 = 0`
   - Parent process set `a0 = sys_fork()`
 - `TaskContext` : set `ra` to `trap_return`
 - `TrapContext` : the same as parent process, **except for `kernel_sp`**
-- [ ] `sys_exec()` : load from elf file
-- [ ] `sys_waitpid(pid, *exit_code)` : wait for child process, and get exit code. **release the space of task struct**
+- [x] `sys_exec()` : load from elf file
+- [x] `sys_waitpid(pid, *exit_code)` : wait for child process, and get exit code. **release the space of task struct**
 - `sys_waitpid(-1)` : wait for any child process
 - `sys_waitpid()` return `-1` : no child process (of this pid)
 - `sys_waitpid()` return `-2` : child process is running
@@ -71,5 +71,31 @@ If no char incoming, wait for it or `yield` to other tasks.
 
 #### User API : wrapper of system call
 
-- [ ] `wait` : `sys_waitpid(-1, *exit_code)`
-- [ ] `waitpid` : `sys_waitpid(id, *exit_code)`
+- [x] `wait` : `sys_waitpid(-1, *exit_code)`
+- [x] `waitpid` : `sys_waitpid(id, *exit_code)`
+
+#### Test Cases
+
+- [x] sleep
+- [x] shell
+- [x] read_test
+- [x] power_7
+- [x] power_5
+- [x] power_3
+- [x] store_fault
+- [x] load_fault
+- [x] hello
+- [x] sleep_simple
+- [x] initproc
+- [x] yield
+- [x] stack_overflow
+- [x] forkexec
+- [ ] forktree
+- [ ] forktest_simple
+- [ ] fantastic_text
+- [ ] matrix
+- [ ] exit
+- [ ] usertests-simple
+- [ ] forktest
+- [ ] usertests
+- [ ] forktest2
