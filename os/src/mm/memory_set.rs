@@ -62,6 +62,11 @@ impl MemorySet {
 
         // the map_area will be dropped here
     }
+
+    pub fn free_resources(&mut self) {
+        self.map_areas.clear();
+        self.page_table.pt_frames.clear();
+    }
 }
 
 impl MemorySet {

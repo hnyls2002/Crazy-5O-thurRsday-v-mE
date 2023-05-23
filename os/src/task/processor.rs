@@ -86,7 +86,7 @@ pub fn proc_schedule() {
             let idle_ctx_ptr = PROCESSOR.idle_task_ctx_ptr();
             let next_ctx_ptr = next_task.task_ctx_ptr();
             next_task.mark_task_status(TaskStatus::Running);
-            PROCESSOR.set_current(next_task.clone());
+            PROCESSOR.set_current(next_task);
             __switch(idle_ctx_ptr, next_ctx_ptr)
         } else {
             panic!("no ready task");

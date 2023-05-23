@@ -6,16 +6,21 @@ use crate::{
 };
 
 pub fn sys_exit_impl(exit_code: i32) -> ! {
-    let cur_task = PROCESSOR
-        .current_arc()
-        .expect("exit implementation : no current task!");
-    info!(
-        "In process \"{}\", pid = {}",
-        cur_task.get_name(),
-        *cur_task.pid
-    );
+    {
+        let cur_task = PROCESSOR
+            .current_arc()
+            .expect("exit implementation : no current task!");
+        info!(
+            "In process \"{}\", pid = {}",
+            cur_task.get_name(),
+            *cur_task.pid
+        );
+        // --------cur task drop here--------
+    }
+
     info!("Application exits with code {}", exit_code);
-    exit_cur_run_next();
+    exit_cur_run_next(0);
+
     panic!("Unreachable in syscall exit implentation");
 }
 
@@ -32,6 +37,9 @@ pub fn sys_yield_impl() -> isize {
 pub fn sys_fork_impl() -> isize {
     let current = PROCESSOR.current_arc().expect("no current task!");
     let forked = Arc::new(current.fork_task_struct());
+    forked.set_parent(Arc::downgrade(&current));
+    current.add_child(forked.clone());
+
     let pid = *forked.pid as isize;
 
     // the forked process will no get system call value, it's return value is stored in a0

@@ -1,4 +1,8 @@
-use alloc::string::String;
+use alloc::{
+    string::String,
+    sync::{Arc, Weak},
+    vec::Vec,
+};
 
 use crate::{
     app_loader::load_app_by_name,
@@ -9,13 +13,16 @@ use crate::{
     trap::{trap_context::TrapContext, trap_handler, trap_return},
 };
 
-use super::{kernel_stack::KernelStack, pid_allocator::PIDTracker, task_context::TaskContext};
+use super::{
+    kernel_stack::KernelStack, pid_allocator::PIDTracker, task_context::TaskContext, INIT_PROC,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TaskStatus {
     Ready,
     Running,
-    Excited,
+    Zombie,
+    Exited,
 }
 
 pub struct TaskStructInner {
@@ -24,6 +31,9 @@ pub struct TaskStructInner {
     pub trap_ctx_frame: Frame,
     pub status: TaskStatus,
     pub user_space: MemorySet,
+    pub exit_code: isize,
+    pub parent: Option<Weak<TaskStruct>>,
+    pub children: Vec<Arc<TaskStruct>>,
 }
 
 pub struct TaskStruct {
@@ -48,6 +58,14 @@ impl TaskStruct {
 
     pub fn mark_task_status(&self, status: TaskStatus) {
         self.inner.exclusive_access().status = status;
+    }
+
+    pub fn add_child(&self, child: Arc<TaskStruct>) {
+        self.inner.exclusive_access().children.push(child);
+    }
+
+    pub fn set_parent(&self, parent: Weak<TaskStruct>) {
+        self.inner.exclusive_access().parent = Some(parent);
     }
 
     pub fn trap_ctx_mut(&self) -> &'static mut TrapContext {
@@ -94,6 +112,9 @@ impl TaskStruct {
                 trap_ctx_frame,
                 status: TaskStatus::Ready,
                 user_space,
+                exit_code: 0,
+                parent: None,
+                children: Vec::new(),
             }),
         }
     }
@@ -125,6 +146,9 @@ impl TaskStruct {
             status: TaskStatus::Ready,
             name: self.get_name().clone(),
             user_space,
+            exit_code: 0,
+            parent: None,
+            children: Vec::new(),
         };
 
         TaskStruct {
@@ -185,5 +209,27 @@ impl TaskStruct {
             trap_handler as usize,
         );
         Ok(())
+    }
+
+    // exit the task
+    pub fn exit_task(&self, exit_code: isize) {
+        let mut inner = self.inner.exclusive_access();
+
+        // change the status
+        inner.status = TaskStatus::Zombie;
+
+        // store the exit code
+        inner.exit_code = exit_code;
+
+        // free the resources
+        inner.user_space.free_resources();
+
+        // move a the child process to INIT_PROC
+        for child in inner.children.iter() {
+            child.set_parent(Arc::downgrade(&INIT_PROC));
+            INIT_PROC.add_child(child.clone());
+        }
+
+        inner.children.clear();
     }
 }

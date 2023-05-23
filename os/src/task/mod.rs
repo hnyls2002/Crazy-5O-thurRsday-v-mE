@@ -1,4 +1,5 @@
 use alloc::sync::Arc;
+use lazy_static::lazy_static;
 
 use crate::app_loader::get_app_names;
 
@@ -18,6 +19,10 @@ pub mod task_struct;
 pub use processor::PROCESSOR;
 pub use task_manager::TASK_MANAGER;
 
+lazy_static! {
+    pub static ref INIT_PROC: Arc<TaskStruct> = Arc::new(TaskStruct::new_from_elf("shell"));
+}
+
 pub fn suspend_cur_run_next() {
     // suspend current task
     let cur_task = PROCESSOR.take_out_current().expect("no current task");
@@ -29,11 +34,17 @@ pub fn suspend_cur_run_next() {
     switch_to_idle(cur_task_ctx_ptr);
 }
 
-pub fn exit_cur_run_next() {
+// if normal exit, exit_code = 0
+// else exit_code = -1
+pub fn exit_cur_run_next(exit_code: isize) {
+    // take out current task, so PROCESSOR.current will be None
     let cur_task = PROCESSOR.take_out_current().expect("no current task");
     let cur_task_ctx_ptr = cur_task.task_ctx_ptr();
-    cur_task.mark_task_status(TaskStatus::Excited);
-    // TODO : free resources
+    cur_task.exit_task(exit_code);
+    // should manually drop cur_task
+    warn!("name is {}", cur_task.get_name());
+    warn!("cur_task ref count = {}", Arc::strong_count(&cur_task));
+    drop(cur_task);
     switch_to_idle(cur_task_ctx_ptr)
 }
 
@@ -44,6 +55,6 @@ pub fn task_init() {
         info!("{}", name);
     }
     info!("==========================================================");
-    let initproc = TaskStruct::new_from_elf("shell");
-    TASK_MANAGER.add_ready_task(Arc::new(initproc));
+
+    TASK_MANAGER.add_ready_task(INIT_PROC.clone());
 }
