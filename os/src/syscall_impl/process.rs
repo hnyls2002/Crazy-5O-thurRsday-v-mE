@@ -2,7 +2,7 @@ use alloc::sync::Arc;
 
 use crate::{
     kfc_sbi::timer::{get_time, CLOCK_FREQ, MSEC_PER_SEC},
-    task::{exit_cur_run_next, suspend_cur_run_next, task_manager::add_suspend_task, PROCESSOR},
+    task::{exit_cur_run_next, suspend_cur_run_next, PROCESSOR, TASK_MANAGER},
 };
 
 pub fn sys_exit_impl(exit_code: i32) -> ! {
@@ -38,7 +38,7 @@ pub fn sys_fork_impl() -> isize {
     let trap_ctx = forked.trap_ctx_mut();
     trap_ctx.x[10] = 0;
 
-    add_suspend_task(forked);
+    TASK_MANAGER.add_ready_task(forked);
     pid
 }
 

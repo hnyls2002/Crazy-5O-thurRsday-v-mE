@@ -5,8 +5,8 @@ use crate::{kfc_util::up_safe_cell::UPSafeCell, mm::PageTable, trap::trap_contex
 use super::{
     switch::__switch,
     task_context::TaskContext,
-    task_manager::fetch_ready_task,
     task_struct::{TaskStatus, TaskStruct},
+    TASK_MANAGER,
 };
 
 pub struct ProcessorInner {
@@ -81,7 +81,7 @@ pub fn switch_to_idle(cur_task_ctx_ptr: *mut TaskContext) {
 // the idle control flow
 pub fn proc_schedule() {
     loop {
-        if let Some(next_task) = fetch_ready_task() {
+        if let Some(next_task) = TASK_MANAGER.fetch_ready_task() {
             // only idle and next task, no current handled here
             let idle_ctx_ptr = PROCESSOR.idle_task_ctx_ptr();
             let next_ctx_ptr = next_task.task_ctx_ptr();

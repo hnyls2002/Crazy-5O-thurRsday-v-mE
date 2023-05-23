@@ -16,7 +16,7 @@ use lazy_static::lazy_static;
 use super::task_struct::TaskStruct;
 
 lazy_static! {
-    static ref TASK_MANAGER: TaskManager = TaskManager {
+    pub static ref TASK_MANAGER: TaskManager = TaskManager {
         inner: UPSafeCell::new(TaskManagerInner {
             task_structs: VecDeque::new(),
         }),
@@ -51,10 +51,12 @@ impl TaskManagerInner {
     }
 }
 
-pub fn fetch_ready_task() -> Option<Arc<TaskStruct>> {
-    TASK_MANAGER.inner.exclusive_access().fetch()
-}
+impl TaskManager {
+    pub fn fetch_ready_task(&self) -> Option<Arc<TaskStruct>> {
+        self.inner.exclusive_access().fetch()
+    }
 
-pub fn add_suspend_task(task: Arc<TaskStruct>) {
-    TASK_MANAGER.inner.exclusive_access().add(task);
+    pub fn add_ready_task(&self, task: Arc<TaskStruct>) {
+        self.inner.exclusive_access().add(task);
+    }
 }

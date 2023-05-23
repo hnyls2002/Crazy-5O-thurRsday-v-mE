@@ -4,7 +4,6 @@ use crate::app_loader::get_app_names;
 
 use self::{
     processor::switch_to_idle,
-    task_manager::add_suspend_task,
     task_struct::{TaskStatus, TaskStruct},
 };
 
@@ -17,13 +16,14 @@ pub mod task_manager;
 pub mod task_struct;
 
 pub use processor::PROCESSOR;
+pub use task_manager::TASK_MANAGER;
 
 pub fn suspend_cur_run_next() {
     // suspend current task
     let cur_task = PROCESSOR.take_out_current().expect("no current task");
     let cur_task_ctx_ptr = cur_task.task_ctx_ptr();
     cur_task.mark_task_status(TaskStatus::Ready);
-    add_suspend_task(cur_task);
+    TASK_MANAGER.add_ready_task(cur_task);
 
     // switch to idle
     switch_to_idle(cur_task_ctx_ptr);
@@ -45,5 +45,5 @@ pub fn task_init() {
     }
     info!("==========================================================");
     let initproc = TaskStruct::new_from_elf("shell");
-    add_suspend_task(Arc::new(initproc));
+    TASK_MANAGER.add_ready_task(Arc::new(initproc));
 }
