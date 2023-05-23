@@ -56,3 +56,10 @@ pub fn wait(exit_code: &mut i32) -> isize {
         return result;
     }
 }
+
+pub fn sleep(time: usize) {
+    let start_time = get_time();
+    while get_time() - start_time < time as isize {
+        yield_();
+    }
+}
