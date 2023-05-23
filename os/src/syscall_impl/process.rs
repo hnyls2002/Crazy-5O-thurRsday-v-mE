@@ -20,7 +20,7 @@ pub fn sys_exit_impl(exit_code: i32) -> ! {
         // --------cur task drop here--------
     }
 
-    exit_cur_run_next(0);
+    exit_cur_run_next(exit_code);
 
     panic!("Unreachable in syscall exit implentation");
 }
@@ -74,6 +74,6 @@ pub fn sys_waitpid_impl(pid: isize, exit_code_ptr: usize) -> isize {
         pt_frames: Vec::new(),
     };
 
-    let exit_code_mut: &mut isize = light_pt.get_mut(exit_code_ptr).expect("invalid pointer!");
+    let exit_code_mut: &mut i32 = light_pt.get_mut(exit_code_ptr).expect("invalid pointer!");
     current.wait_task(pid, exit_code_mut)
 }

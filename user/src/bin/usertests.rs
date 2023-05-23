@@ -15,14 +15,14 @@ static SUCC_TESTS: &[(&str, &str, &str, &str, i32)] = &[
     ("forktest\0", "\0", "\0", "\0", 0),
     ("forktest2\0", "\0", "\0", "\0", 0),
     ("forktree\0", "\0", "\0", "\0", 0),
-    ("hello_world\0", "\0", "\0", "\0", 0),
+    ("hello\0", "\0", "\0", "\0", 0),
     ("matrix\0", "\0", "\0", "\0", 0),
     ("sleep_simple\0", "\0", "\0", "\0", 0),
     ("sleep\0", "\0", "\0", "\0", 0),
     ("yield\0", "\0", "\0", "\0", 0),
 ];
 
-static FAIL_TESTS: &[(&str, &str, &str, &str, i32)] = &[("stack_overflow\0", "\0", "\0", "\0", -2)];
+static FAIL_TESTS: &[(&str, &str, &str, &str, i32)] = &[("stack_overflow\0", "\0", "\0", "\0", -1)];
 
 use user_lib::api::{exec, fork, waitpid};
 

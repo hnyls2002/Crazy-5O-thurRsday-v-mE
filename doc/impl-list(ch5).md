@@ -90,12 +90,12 @@ If no char incoming, wait for it or `yield` to other tasks.
 - [x] yield
 - [x] stack_overflow
 - [x] forkexec
-- [ ] forktree
-- [ ] forktest_simple
-- [ ] fantastic_text
-- [ ] matrix
-- [ ] exit
-- [ ] usertests-simple
-- [ ] forktest
-- [ ] usertests
-- [ ] forktest2
+- [x] forktree
+- [x] forktest_simple
+- [x] fantastic_text
+- [x] matrix
+- [x] exit
+- [x] usertests-simple
+- [x] forktest
+- [x] usertests
+- [x] forktest2

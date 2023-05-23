@@ -36,7 +36,7 @@ pub fn suspend_cur_run_next() {
 
 // if normal exit, exit_code = 0
 // else exit_code = -1
-pub fn exit_cur_run_next(exit_code: isize) {
+pub fn exit_cur_run_next(exit_code: i32) {
     // take out current task, so PROCESSOR.current will be None
     let cur_task = PROCESSOR.take_out_current().expect("no current task");
     let cur_task_ctx_ptr = cur_task.task_ctx_ptr();

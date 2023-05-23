@@ -30,7 +30,7 @@ pub struct TaskStructInner {
     pub trap_ctx_frame: Frame,
     pub status: TaskStatus,
     pub user_space: MemorySet,
-    pub exit_code: isize,
+    pub exit_code: i32,
     pub parent: Option<Weak<TaskStruct>>,
     pub children: Vec<Arc<TaskStruct>>,
 }
@@ -207,7 +207,7 @@ impl TaskStruct {
 // system call related functions
 impl TaskStruct {
     // exit the task
-    pub fn exit_task(&self, exit_code: isize) {
+    pub fn exit_task(&self, exit_code: i32) {
         let mut inner = self.inner.exclusive_access();
 
         // change the status
@@ -228,7 +228,7 @@ impl TaskStruct {
         inner.children.clear();
     }
 
-    pub fn wait_task(&self, pid: isize, exit_code_mut: &mut isize) -> isize {
+    pub fn wait_task(&self, pid: isize, exit_code_mut: &mut i32) -> isize {
         let mut inner = self.inner.exclusive_access();
 
         // no required pid found
