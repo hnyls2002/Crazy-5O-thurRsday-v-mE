@@ -58,8 +58,8 @@ pub fn sys_getpid_impl() -> isize {
 // the pointer is in user's address space
 pub fn sys_exec_impl(path: *const u8) -> isize {
     let current = PROCESSOR.current_arc().expect("no current task!");
-    if let Ok(_) = current.exec_from_elf(path) {
-        0
+    if let Some(res) = current.exec_from_elf(path) {
+        res
     } else {
         -1
     }

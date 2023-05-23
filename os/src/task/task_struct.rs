@@ -157,27 +157,19 @@ impl TaskStruct {
         }
     }
 
-    pub fn exec_from_elf(&self, name_ptr: *const u8) -> Result<(), ()> {
+    pub fn exec_from_elf(&self, name_ptr: *const u8) -> Option<isize> {
         // update name
-        let name_try = self
+        let name = self
             .inner
             .exclusive_access()
             .user_space
             .page_table
-            .translate_str(name_ptr);
-
-        // if the name is not found
-        let name = match name_try {
-            Some(name) => name,
-            None => {
-                return Err(());
-            }
-        };
+            .translate_str(name_ptr)?;
 
         self.inner.exclusive_access().name = name.clone();
 
         // pid : no change
-        let elf_data = load_app_by_name(&name).expect("failed to load app");
+        let elf_data = load_app_by_name(&name)?;
 
         // kernel stack doesn't need to be updated
 
@@ -207,7 +199,8 @@ impl TaskStruct {
             self.kernel_stack.top_sp(),
             trap_handler as usize,
         );
-        Ok(())
+
+        Some(0)
     }
 }
 
