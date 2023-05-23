@@ -20,7 +20,7 @@ pub use processor::PROCESSOR;
 pub use task_manager::TASK_MANAGER;
 
 lazy_static! {
-    pub static ref INIT_PROC: Arc<TaskStruct> = Arc::new(TaskStruct::new_from_elf("shell"));
+    pub static ref INIT_PROC: Arc<TaskStruct> = Arc::new(TaskStruct::new_from_elf("initproc"));
 }
 
 pub fn suspend_cur_run_next() {

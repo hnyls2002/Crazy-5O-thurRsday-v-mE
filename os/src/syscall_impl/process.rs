@@ -12,14 +12,14 @@ pub fn sys_exit_impl(exit_code: i32) -> ! {
             .current_arc()
             .expect("exit implementation : no current task!");
         info!(
-            "In process \"{}\", pid = {}",
+            "In process \"{}\", pid = {}, exit with code {}",
             cur_task.get_name(),
-            *cur_task.pid
+            *cur_task.pid,
+            exit_code
         );
         // --------cur task drop here--------
     }
 
-    info!("Application exits with code {}", exit_code);
     exit_cur_run_next(0);
 
     panic!("Unreachable in syscall exit implentation");

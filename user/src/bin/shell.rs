@@ -27,7 +27,10 @@ pub fn main() -> isize {
     loop {
         let c = getchar();
         match c {
-            CC => break,
+            CC => {
+                println!("^C");
+                break;
+            }
             LF | CR => {
                 println!("");
 

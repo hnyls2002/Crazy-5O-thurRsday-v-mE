@@ -1,6 +1,9 @@
 use alloc::{sync::Arc, vec::Vec};
 
-use crate::{kfc_util::up_safe_cell::UPSafeCell, mm::PageTable, trap::trap_context::TrapContext};
+use crate::{
+    kfc_sbi::sbi_shutdown, kfc_util::up_safe_cell::UPSafeCell, mm::PageTable,
+    trap::trap_context::TrapContext,
+};
 
 use super::{
     switch::__switch,
@@ -89,7 +92,9 @@ pub fn proc_schedule() {
             PROCESSOR.set_current(next_task);
             __switch(idle_ctx_ptr, next_ctx_ptr)
         } else {
-            panic!("no ready task");
+            info!("No process to schedule...");
+            info!("Shutdown...");
+            sbi_shutdown(0);
         }
     }
 }

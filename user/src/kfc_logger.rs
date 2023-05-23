@@ -21,17 +21,6 @@ macro_rules! warn {
 }
 
 #[macro_export]
-macro_rules! info {
-    ($fmt: literal $(, $($arg: tt)+)?) => {
-        if cfg!(feature = "Info") {
-            $crate::console::print(format_args!(concat!(
-                "\x1b[34m", "[INFO] ", $fmt, "\x1b[0m", "\n"
-            ) $(, $($arg)+)?));
-        }
-    }
-}
-
-#[macro_export]
 macro_rules! debug {
     ($fmt: literal $(, $($arg: tt)+)?) => {
         if cfg!(feature = "Debug") {

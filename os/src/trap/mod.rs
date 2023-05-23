@@ -52,13 +52,15 @@ pub fn trap_handler() -> ! {
                             .current_arc()
                             .expect("exception handler : no current task");
                         info!(
-                            "In process \"{}\", pid = {}",
+                            "In process \"{}\", pid = {}, exception \x1b[31m[{:?}]\x1b[34m happen at address : {:#X}, s_val : {:#X}",
                             cur_task.get_name(),
-                            *cur_task.pid
+                            *cur_task.pid,
+                            e,
+                            trap_ctx.s_epc,
+                            s_tval
                         );
                         // --------cur task drop here--------
                     }
-                    info!("The exception \x1b[31m[{:?}]\x1b[34m happen at address : {:#X}, s_val : {:#X}", e,trap_ctx.s_epc, s_tval);
                     exit_cur_run_next(-1);
                     // trap_ctx.s_epc += 4;
                 }
