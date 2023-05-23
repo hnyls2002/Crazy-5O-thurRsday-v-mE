@@ -30,6 +30,13 @@ pub fn main() -> isize {
             CC => break,
             LF | CR => {
                 println!("");
+
+                if line.is_empty() {
+                    print!("{}", SHELL);
+                    continue;
+                }
+
+                line.push('\0');
                 let pid = fork();
                 if pid == 0 {
                     if exec(line.as_str()) == -1 {
