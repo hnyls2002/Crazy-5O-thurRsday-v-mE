@@ -2,10 +2,7 @@ use alloc::collections::BTreeMap;
 
 use crate::{
     config::{KERNEL_STACK_SIZE, PAGE_BYTES, TRAMPOLINE_VIRT_ADDR},
-    mm::{
-        kernel_space::{add_kernel_stack, remove_map_area},
-        MapArea, MapPerm, VPRange, VirtAddr,
-    },
+    mm::{MapArea, MapPerm, VPRange, VirtAddr, KERNEL_SPACE},
 };
 
 // a guard page between each task's kernel stack
@@ -35,7 +32,7 @@ impl KernelStack {
             MapPerm::R | MapPerm::W,
             None,
         );
-        add_kernel_stack(kernel_stack);
+        KERNEL_SPACE.add_kernel_stack(kernel_stack);
         KernelStack { pid }
     }
 }
@@ -44,6 +41,6 @@ impl Drop for KernelStack {
     fn drop(&mut self) {
         let range = kernel_stack_range(self.pid);
         let vp_range = VPRange::new(range.0, range.1);
-        remove_map_area(&vp_range);
+        KERNEL_SPACE.remove_map_area(&vp_range);
     }
 }

@@ -124,6 +124,14 @@ impl KernelSpace {
     pub fn pt_entry(&self) -> Frame {
         self.inner.exclusive_access().page_table.entry
     }
+
+    pub fn add_kernel_stack(&self, stack: MapArea) {
+        self.inner.exclusive_access().insert_new_map_area(stack);
+    }
+
+    pub fn remove_map_area(&self, vp_range: &VPRange) {
+        self.inner.exclusive_access().relase_area(vp_range);
+    }
 }
 
 pub fn kernel_space_init() {
@@ -137,15 +145,4 @@ pub fn activate_kernel_space() {
         // satp::set(satp::Mode::Sv39, 0, ppn);
         asm!("sfence.vma");
     };
-}
-
-pub fn add_kernel_stack(stack: MapArea) {
-    KERNEL_SPACE
-        .inner
-        .exclusive_access()
-        .insert_new_map_area(stack);
-}
-
-pub fn remove_map_area(vp_range: &VPRange) {
-    KERNEL_SPACE.inner.exclusive_access().relase_area(&vp_range);
 }
