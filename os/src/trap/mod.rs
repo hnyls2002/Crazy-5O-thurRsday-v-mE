@@ -27,7 +27,7 @@ pub fn trap_handler() -> ! {
     // when in S-mode, disable the exception
     // the interrupt has been disabled by hardware (sstatus.sie = 0)
     unsafe { stvec::write(kernelvec as usize, stvec::TrapMode::Direct) };
-    let trap_ctx = PROCESSOR.cur_trap_ctx_mut();
+    let mut trap_ctx = PROCESSOR.cur_trap_ctx_mut();
     let s_cause = scause::read();
     let s_tval = stval::read();
     match s_cause.cause() {
@@ -38,10 +38,13 @@ pub fn trap_handler() -> ! {
                     // error!("[trap_handler] sepc : {:X}", trap_ctx.s_epc);
                     // error!("[trap_handler] sp : {:X}", trap_ctx.x[2]);
                     trap_ctx.s_epc += 4;
-                    trap_ctx.x[10] = syscall_dispathcer(
+                    let result = syscall_dispathcer(
                         trap_ctx.x[17],
                         [trap_ctx.x[10], trap_ctx.x[11], trap_ctx.x[12]],
                     ) as usize;
+                    // exec will change the trap_ctx
+                    trap_ctx = PROCESSOR.cur_trap_ctx_mut();
+                    trap_ctx.x[10] = result;
                 }
                 _ => {
                     let cur_task = PROCESSOR
