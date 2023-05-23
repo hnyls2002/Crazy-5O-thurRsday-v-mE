@@ -22,7 +22,6 @@ pub enum TaskStatus {
     Ready,
     Running,
     Zombie,
-    Exited,
 }
 
 pub struct TaskStructInner {
@@ -210,7 +209,10 @@ impl TaskStruct {
         );
         Ok(())
     }
+}
 
+// system call related functions
+impl TaskStruct {
     // exit the task
     pub fn exit_task(&self, exit_code: isize) {
         let mut inner = self.inner.exclusive_access();
@@ -231,5 +233,41 @@ impl TaskStruct {
         }
 
         inner.children.clear();
+    }
+
+    pub fn wait_task(&self, pid: isize, exit_code_mut: &mut isize) -> isize {
+        let mut inner = self.inner.exclusive_access();
+
+        // no required pid found
+        if inner
+            .children
+            .iter()
+            .find(|&ch| pid == -1 || *ch.pid == pid as usize)
+            .is_none()
+        {
+            return -1;
+        }
+
+        let zombie = inner.children.iter().position(|ch| {
+            (pid == -1 || *ch.pid == pid as usize) && ch.task_status() == TaskStatus::Zombie
+        });
+
+        if let Some(zom_idx) = zombie {
+            let ch = inner.children.remove(zom_idx);
+            let pid = *ch.pid;
+
+            assert!(
+                Arc::strong_count(&ch) == 1,
+                "zombie process has more than one reference"
+            );
+            *exit_code_mut = ch.inner.exclusive_access().exit_code;
+
+            // ----------------- ch dropped here -----------------
+
+            pid as isize
+        } else {
+            // still running
+            return -2;
+        }
     }
 }

@@ -206,4 +206,10 @@ impl PageTable {
         }
         Some(ret)
     }
+
+    // translate a virtual address to a mutable reference in kernel space
+    pub fn get_mut<T>(&self, ptr: usize) -> Option<&'static mut T> {
+        let va = VirtAddr(ptr);
+        unsafe { ((self.translate_vp(va.floor_page())?.0 + va.get_offset()) as *mut T).as_mut() }
+    }
 }

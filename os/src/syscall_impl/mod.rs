@@ -28,7 +28,7 @@ pub fn syscall_dispathcer(id: usize, args: [usize; 3]) -> isize {
         SYSCALL_READ => sys_read_impl(args[0], args[1] as *mut u8, args[2]),
         SYSCALL_FORK => sys_fork_impl(),
         SYSCALL_EXEC => sys_exec_impl(args[0] as *const u8),
-        SYSCALL_WAITPID => sys_waitpid_impl(args[0] as isize, args[1] as *mut i32),
+        SYSCALL_WAITPID => sys_waitpid_impl(args[0] as isize, args[1]),
         SYSCALL_GETPID => sys_getpid_impl(),
         _ => panic!("unsupported syscall id: {}", id),
     }

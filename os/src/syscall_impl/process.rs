@@ -1,7 +1,8 @@
-use alloc::sync::Arc;
+use alloc::{sync::Arc, vec::Vec};
 
 use crate::{
     kfc_sbi::timer::{get_time, CLOCK_FREQ, MSEC_PER_SEC},
+    mm::PageTable,
     task::{exit_cur_run_next, suspend_cur_run_next, PROCESSOR, TASK_MANAGER},
 };
 
@@ -64,6 +65,15 @@ pub fn sys_exec_impl(path: *const u8) -> isize {
     }
 }
 
-pub fn sys_waitpid_impl(pid: isize, exit_code: *mut i32) -> isize {
-    todo!()
+/// NO child process has the given pid -> -1
+/// The required pid is still running -> -2
+pub fn sys_waitpid_impl(pid: isize, exit_code_ptr: usize) -> isize {
+    let current = PROCESSOR.current_arc().expect("no current task!");
+    let light_pt = PageTable {
+        entry: current.pt_entry(),
+        pt_frames: Vec::new(),
+    };
+
+    let exit_code_mut: &mut isize = light_pt.get_mut(exit_code_ptr).expect("invalid pointer!");
+    current.wait_task(pid, exit_code_mut)
 }

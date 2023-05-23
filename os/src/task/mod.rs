@@ -42,8 +42,6 @@ pub fn exit_cur_run_next(exit_code: isize) {
     let cur_task_ctx_ptr = cur_task.task_ctx_ptr();
     cur_task.exit_task(exit_code);
     // should manually drop cur_task
-    warn!("name is {}", cur_task.get_name());
-    warn!("cur_task ref count = {}", Arc::strong_count(&cur_task));
     drop(cur_task);
     switch_to_idle(cur_task_ctx_ptr)
 }

@@ -1,6 +1,7 @@
 #![allow(unused)]
 use crate::syscall::{
-    sys_exec, sys_exit, sys_fork, sys_getpid, sys_read, sys_times, sys_write, sys_yield,
+    sys_exec, sys_exit, sys_fork, sys_getpid, sys_read, sys_times, sys_waitpid, sys_write,
+    sys_yield,
 };
 
 pub fn write(fd: usize, buffer: &[u8]) -> isize {
@@ -36,10 +37,22 @@ pub fn exec(path: &str) -> isize {
 }
 
 pub fn waitpid(pid: usize, exit_code: &mut i32) -> isize {
-    loop {}
-    todo!()
+    loop {
+        let result = sys_waitpid(pid as isize, exit_code);
+        if result == -2 {
+            yield_();
+        } else {
+            return result;
+        }
+    }
 }
 
 pub fn wait(exit_code: &mut i32) -> isize {
-    todo!()
+    loop {
+        let result = sys_waitpid(-1, exit_code);
+        if result == -2 {
+            yield_();
+        }
+        return result;
+    }
 }
